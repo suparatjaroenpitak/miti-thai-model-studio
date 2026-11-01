@@ -1,0 +1,21 @@
+{
+  "status": "passed",
+  "counts": {
+    "moduleFunction": 785,
+    "operator": 2499,
+    "type": 4012,
+    "function": 5234,
+    "property": 10159
+  },
+  "checks": [
+    "Unique keys and installed build identity",
+    "All registered bpy.ops identities",
+    "Every bpy.types RNA class and defining property/function",
+    "Operator parameter schema",
+    "Official Thai translation provenance",
+    "Representative bmesh/mathutils/GPU/data bindings"
+  ]
+}
+Blender 5.2.2 LTS (hash d13f752e3b9c built 2026-09-15 01:37:04)
+
+Blender quit

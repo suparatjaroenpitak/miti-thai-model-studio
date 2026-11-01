@@ -1,0 +1,28 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <UseWindowsForms>true</UseWindowsForms>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <DefaultItemExcludes>$(DefaultItemExcludes);artifacts\**;dist\**</DefaultItemExcludes>
+    <AssemblyName>MitiStudio</AssemblyName>
+    <RootNamespace>ThaiModelStudio</RootNamespace>
+    <ApplicationHighDpiMode>PerMonitorV2</ApplicationHighDpiMode>
+    <Version>0.2.0</Version>
+    <Product>มิติ สตูดิโอ</Product>
+    <Description>สร้างโมเดลด้วยโค้ด พร้อม Blender และเมนูภาษาไทย</Description>
+  </PropertyGroup>
+  <ItemGroup>
+    <None Update="engine\*.py" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <None Update="engine\*.json" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <None Update="examples\*.py" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <None Update="README.md" CopyToPublishDirectory="PreserveNewest" />
+    <None Update="docs\คำสั่งภาษาไทย.md" CopyToPublishDirectory="PreserveNewest" />
+    <None Update="docs\API-ภาษาไทย.md" CopyToPublishDirectory="PreserveNewest" />
+    <None Update="docs\thai-api-runtime.md" CopyToPublishDirectory="PreserveNewest" />
+    <None Update="docs\Blender-REA.md" CopyToPublishDirectory="PreserveNewest" />
+    <None Update="docs\rea\**\*" CopyToPublishDirectory="PreserveNewest" />
+    <Compile Remove="tests\**\*.cs" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,10 @@
+bin/
+obj/
+UserData/
+*.user
+*.blend1
+__pycache__/
+dist/
+artifacts/
+startup-error.log
+tests/output/

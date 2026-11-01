@@ -1,0 +1,215 @@
+00:02.406  bpy.rna          | WARNING current value '1' matches no enum in 'EnumProperty', 'asset_library_reference', 'default'
+00:02.406  bpy.rna          | WARNING current value '0' matches no enum in 'EnumProperty', 'sort_method', 'default'
+00:02.406  bpy.rna          | WARNING current value '0' matches no enum in 'EnumProperty', 'sort_method', 'default'
+00:02.406  bpy.rna          | WARNING current value '0' matches no enum in 'EnumProperty', 'asset_library_reference', 'default'
+00:02.406  bpy.rna          | WARNING current value '0' matches no enum in 'EnumProperty', 'sort_method', 'default'
+00:02.406  bpy.rna          | WARNING current value '0' matches no enum in 'EnumProperty', 'sort_method', 'default'
+00:02.422  bpy.rna          | WARNING current value '0' matches no enum in 'EnumProperty', 'sort_method', 'default'
+00:02.422  bpy.rna          | WARNING current value '0' matches no enum in 'EnumProperty', 'sort_method', 'default'
+00:02.422  bpy.rna          | WARNING current value '0' matches no enum in 'EnumProperty', 'sort_method', 'default'
+00:02.437  bpy.rna          | WARNING current value '0' matches no enum in 'EnumProperty', 'collection', 'default'
+00:02.437  bpy.rna          | WARNING current value '0' matches no enum in 'EnumProperty', 'collection', 'default'
+00:02.437  bpy.rna          | WARNING current value '0' matches no enum in 'EnumProperty', 'collection', 'default'
+00:02.469  bpy.rna          | WARNING current value '0' matches no enum in 'EnumProperty', 'sort_method', 'default'
+00:02.469  bpy.rna          | WARNING current value '0' matches no enum in 'EnumProperty', 'export_format', 'default'
+00:02.484  bpy.rna          | WARNING current value '0' matches no enum in 'EnumProperty', 'repo', 'default'
+00:02.484  bpy.rna          | WARNING current value '0' matches no enum in 'EnumProperty', 'target', 'default'
+00:02.484  bpy.rna          | WARNING current value '0' matches no enum in 'EnumProperty', 'sort_method', 'default'
+00:02.500  bpy.rna          | WARNING current value '1' matches no enum in 'EnumProperty', 'sort_method', 'default'
+00:02.500  bpy.rna          | WARNING current value '0' matches no enum in 'EnumProperty', 'sort_method', 'default'
+00:02.516  bpy.rna          | WARNING current value '0' matches no enum in 'EnumProperty', 'sort_method', 'default'
+00:02.531  bpy.rna          | WARNING current value '0' matches no enum in 'EnumProperty', 'sort_method', 'default'
+00:02.547  bpy.rna          | WARNING current value '0' matches no enum in 'EnumProperty', 'sort_method', 'default'
+00:02.547  bpy.rna          | WARNING current value '0' matches no enum in 'EnumProperty', 'sort_method', 'default'
+00:02.547  bpy.rna          | WARNING current value '0' matches no enum in 'EnumProperty', 'sort_method', 'default'
+00:02.562  bpy.rna          | WARNING current value '0' matches no enum in 'EnumProperty', 'scene', 'default'
+00:02.578  bpy.rna          | WARNING current value '0' matches no enum in 'EnumProperty', 'shape', 'default'
+00:02.594  bpy.rna          | WARNING current value '0' matches no enum in 'EnumProperty', 'action', 'default'
+00:02.609  bpy.rna          | WARNING current value '0' matches no enum in 'EnumProperty', 'sort_method', 'default'
+00:02.625  bpy.rna          | WARNING current value '0' matches no enum in 'EnumProperty', 'type', 'default'
+00:02.641  bpy.rna          | WARNING current value '0' matches no enum in 'EnumProperty', 'collection', 'default'
+00:02.641  bpy.rna          | WARNING current value '0' matches no enum in 'EnumProperty', 'collection', 'default'
+00:02.641  bpy.rna          | WARNING current value '0' matches no enum in 'EnumProperty', 'collection', 'default'
+00:02.641  bpy.rna          | WARNING current value '0' matches no enum in 'EnumProperty', 'type', 'default'
+00:02.641  bpy.rna          | WARNING current value '0' matches no enum in 'EnumProperty', 'type', 'default'
+00:02.656  bpy.rna          | WARNING current value '0' matches no enum in 'EnumProperty', 'data_type', 'default'
+00:02.656  bpy.rna          | WARNING current value '0' matches no enum in 'EnumProperty', 'sort_method', 'default'
+00:02.656  bpy.rna          | WARNING current value '0' matches no enum in 'EnumProperty', 'modifier', 'default'
+00:02.656  bpy.rna          | WARNING current value '0' matches no enum in 'EnumProperty', 'modifier', 'default'
+00:02.656  bpy.rna          | WARNING current value '0' matches no enum in 'EnumProperty', 'modifier', 'default'
+00:02.656  bpy.rna          | WARNING current value '0' matches no enum in 'EnumProperty', 'modifier', 'default'
+00:02.656  bpy.rna          | WARNING current value '0' matches no enum in 'EnumProperty', 'modifier', 'default'
+00:02.656  bpy.rna          | WARNING current value '0' matches no enum in 'EnumProperty', 'scene', 'default'
+00:02.672  bpy.rna          | WARNING current value '0' matches no enum in 'EnumProperty', 'sort_method', 'default'
+00:02.687  bpy.rna          | WARNING current value '1' matches no enum in 'EnumProperty', 'group_select_mode', 'default'
+00:02.687  bpy.rna          | WARNING current value '1' matches no enum in 'EnumProperty', 'group_select_mode', 'default'
+00:02.687  bpy.rna          | WARNING current value '1' matches no enum in 'EnumProperty', 'group_select_mode', 'default'
+00:02.687  bpy.rna          | WARNING current value '0' matches no enum in 'EnumProperty', 'group_select_mode', 'default'
+00:02.687  bpy.rna          | WARNING current value '0' matches no enum in 'EnumProperty', 'group_select_mode', 'default'
+00:02.687  bpy.rna          | WARNING current value '1' matches no enum in 'EnumProperty', 'group_select_mode', 'default'
+00:02.687  bpy.rna          | WARNING current value '0' matches no enum in 'EnumProperty', 'group', 'default'
+00:02.687  bpy.rna          | WARNING current value '1' matches no enum in 'EnumProperty', 'group_select_mode', 'default'
+00:02.687  bpy.rna          | WARNING current value '0' matches no enum in 'EnumProperty', 'sort_method', 'default'
+00:02.687  bpy.rna          | WARNING current value '0' matches no enum in 'EnumProperty', 'action', 'default'
+00:02.703  bpy.rna          | WARNING current value '0' matches no enum in 'EnumProperty', 'image', 'default'
+00:02.703  bpy.rna          | WARNING current value '327680' matches no enum in 'FloatProperty', 'clean_angle', 'subtype'
+00:02.703  bpy.rna          | WARNING current value '327680' matches no enum in 'FloatProperty', 'dirt_angle', 'subtype'
+00:02.734  bpy.rna          | WARNING current value '0' matches no enum in 'EnumProperty', 'target', 'default'
+00:02.734  bpy.rna          | WARNING current value '0' matches no enum in 'EnumProperty', 'sort_method', 'default'
+00:02.766  bpy.rna          | WARNING current value '0' matches no enum in 'EnumProperty', 'sort_method', 'default'
+00:02.781  bpy.rna          | WARNING current value '0' matches no enum in 'EnumProperty', 'sort_method', 'default'
+00:02.797  bpy.rna          | WARNING current value '0' matches no enum in 'EnumProperty', 'sort_method', 'default'
+00:02.797  bpy.rna          | WARNING current value '0' matches no enum in 'EnumProperty', 'scene', 'default'
+00:02.797  bpy.rna          | WARNING current value '0' matches no enum in 'EnumProperty', 'sort_method', 'default'
+00:02.797  bpy.rna          | WARNING current value '0' matches no enum in 'EnumProperty', 'sort_method', 'default'
+00:02.797  bpy.rna          | WARNING current value '0' matches no enum in 'EnumProperty', 'mask', 'default'
+00:02.812  bpy.rna          | WARNING current value '0' matches no enum in 'EnumProperty', 'sort_method', 'default'
+00:02.812  bpy.rna          | WARNING current value '0' matches no enum in 'EnumProperty', 'clip', 'default'
+00:02.812  bpy.rna          | WARNING current value '0' matches no enum in 'EnumProperty', 'scene', 'default'
+00:02.812  bpy.rna          | WARNING current value '0' matches no enum in 'EnumProperty', 'sort_method', 'default'
+00:02.812  bpy.rna          | WARNING current value '0' matches no enum in 'EnumProperty', 'type', 'default'
+00:02.812  bpy.rna          | WARNING current value '0' matches no enum in 'EnumProperty', 'sort_method', 'default'
+00:02.828  bpy.rna          | WARNING current value '0' matches no enum in 'EnumProperty', 'sort_method', 'default'
+00:02.828  bpy.rna          | WARNING current value '0' matches no enum in 'EnumProperty', 'sort_method', 'default'
+00:02.828  bpy.rna          | WARNING current value '0' matches no enum in 'EnumProperty', 'sort_method', 'default'
+00:02.828  bpy.rna          | WARNING current value '0' matches no enum in 'EnumProperty', 'sort_method', 'default'
+00:02.875  bpy.rna          | WARNING current value '0' matches no enum in 'EnumProperty', 'name', 'default'
+00:02.891  bpy.rna          | WARNING current value '0' matches no enum in 'EnumProperty', 'name', 'default'
+00:02.891  bpy.rna          | WARNING current value '0' matches no enum in 'EnumProperty', 'sort_method', 'default'
+00:02.891  bpy.rna          | WARNING current value '0' matches no enum in 'EnumProperty', 'sort_method', 'default'
+00:02.891  bpy.rna          | WARNING current value '0' matches no enum in 'EnumProperty', 'sort_method', 'default'
+00:02.891  bpy.rna          | WARNING current value '0' matches no enum in 'EnumProperty', 'sort_method', 'default'
+00:02.891  bpy.rna          | WARNING current value '0' matches no enum in 'EnumProperty', 'sort_method', 'default'
+00:02.906  bpy.rna          | WARNING current value '0' matches no enum in 'EnumProperty', 'sort_method', 'default'
+00:02.906  bpy.rna          | WARNING current value '0' matches no enum in 'EnumProperty', 'sort_method', 'default'
+00:02.906  bpy.rna          | WARNING current value '0' matches no enum in 'EnumProperty', 'sort_method', 'default'
+00:02.906  bpy.rna          | WARNING current value '0' matches no enum in 'EnumProperty', 'sort_method', 'default'
+00:02.906  bpy.rna          | WARNING current value '0' matches no enum in 'EnumProperty', 'sort_method', 'default'
+00:02.906  bpy.rna          | WARNING current value '0' matches no enum in 'EnumProperty', 'sort_method', 'default'
+00:02.906  bpy.rna          | WARNING current value '0' matches no enum in 'EnumProperty', 'sort_method', 'default'
+00:02.906  bpy.rna          | WARNING current value '0' matches no enum in 'EnumProperty', 'sort_method', 'default'
+00:02.906  bpy.rna          | WARNING current value '0' matches no enum in 'EnumProperty', 'sort_method', 'default'
+00:02.906  bpy.rna          | WARNING current value '0' matches no enum in 'EnumProperty', 'sort_method', 'default'
+00:02.906  bpy.rna          | WARNING current value '0' matches no enum in 'EnumProperty', 'sort_method', 'default'
+00:02.922  bpy.rna          | WARNING current value '0' matches no enum in 'EnumProperty', 'subtype', 'default'
+00:02.922  bpy.rna          | WARNING current value '3' matches no enum in 'EnumProperty', 'sort_method', 'default'
+00:02.922  bpy.rna          | WARNING current value '0' matches no enum in 'EnumProperty', 'sort_method', 'default'
+00:02.922  bpy.rna          | WARNING current value '0' matches no enum in 'EnumProperty', 'sort_method', 'default'
+00:02.922  bpy.rna          | WARNING current value '-1' matches no enum in 'EnumProperty', 'working_space', 'default'
+00:02.922  bpy.rna          | WARNING current value '0' matches no enum in 'EnumProperty', 'sort_method', 'default'
+00:02.922  bpy.rna          | WARNING current value '0' matches no enum in 'EnumProperty', 'sort_method', 'default'
+00:02.922  bpy.rna          | WARNING current value '0' matches no enum in 'EnumProperty', 'type', 'default'
+00:02.922  bpy.rna          | WARNING current value '0' matches no enum in 'EnumProperty', 'sort_method', 'default'
+00:02.922  bpy.rna          | WARNING current value '0' matches no enum in 'EnumProperty', 'sort_method', 'default'
+operators 2499
+00:02.953  bpy.rna          | WARNING current value '65536' matches no enum in 'EnumProperty', 'ui_type', 'default'
+00:03.000  bpy.rna          | WARNING current value '0' matches no enum in 'EnumProperty', 'working_space', 'default'
+00:03.031  bpy.rna          | WARNING current value '262144' matches no enum in 'PointerProperty', 'gradient', 'subtype'
+00:03.078  bpy.rna          | WARNING current value '262144' matches no enum in 'PointerProperty', 'color_ramp', 'subtype'
+00:03.141  bpy.rna          | WARNING current value '65536' matches no enum in 'FloatProperty', 'offset', 'subtype'
+00:03.141  bpy.rna          | WARNING current value '65536' matches no enum in 'FloatProperty', 'extrude', 'subtype'
+00:03.141  bpy.rna          | WARNING current value '65536' matches no enum in 'FloatProperty', 'bevel_depth', 'subtype'
+00:03.219  bpy.rna          | WARNING current value '262144' matches no enum in 'PointerProperty', 'color_ramp', 'subtype'
+00:03.234  bpy.rna          | WARNING current value '0' matches no enum in 'EnumProperty', 'value', 'default'
+00:03.437  bpy.rna          | WARNING current value '262144' matches no enum in 'PointerProperty', 'image_user', 'subtype'
+00:03.437  bpy.rna          | WARNING current value '262144' matches no enum in 'PointerProperty', 'default', 'subtype'
+00:03.437  bpy.rna          | WARNING current value '262144' matches no enum in 'PointerProperty', 'addon', 'subtype'
+00:03.437  bpy.rna          | WARNING current value '262144' matches no enum in 'PointerProperty', 'user', 'subtype'
+00:03.500  bpy.rna          | WARNING current value '65549' matches no enum in 'FloatProperty', 'radius', 'subtype'
+00:03.578  bpy.rna          | WARNING current value '0' matches no enum in 'EnumProperty', 'default_value', 'default'
+00:03.609  bpy.rna          | WARNING current value '0' matches no enum in 'EnumProperty', 'default_value', 'default'
+00:03.766  bpy.rna          | WARNING current value '65536' matches no enum in 'FloatProperty', 'limit_lin_x_lower', 'subtype'
+00:03.766  bpy.rna          | WARNING current value '65536' matches no enum in 'FloatProperty', 'limit_lin_x_upper', 'subtype'
+00:03.766  bpy.rna          | WARNING current value '65536' matches no enum in 'FloatProperty', 'limit_lin_y_lower', 'subtype'
+00:03.766  bpy.rna          | WARNING current value '65536' matches no enum in 'FloatProperty', 'limit_lin_y_upper', 'subtype'
+00:03.766  bpy.rna          | WARNING current value '65536' matches no enum in 'FloatProperty', 'limit_lin_z_lower', 'subtype'
+00:03.766  bpy.rna          | WARNING current value '65536' matches no enum in 'FloatProperty', 'limit_lin_z_upper', 'subtype'
+00:03.766  bpy.rna          | WARNING current value '524288' matches no enum in 'FloatProperty', 'motor_lin_target_velocity', 'subtype'
+00:03.766  bpy.rna          | WARNING current value '524288' matches no enum in 'FloatProperty', 'deactivate_linear_velocity', 'subtype'
+00:03.766  bpy.rna          | WARNING current value '524288' matches no enum in 'FloatProperty', 'deactivate_angular_velocity', 'subtype'
+00:03.766  bpy.rna          | WARNING current value '65536' matches no enum in 'FloatProperty', 'collision_margin', 'subtype'
+00:03.844  bpy.rna          | WARNING current value '0' matches no enum in 'EnumProperty', 'node_tree_sub_type', 'default'
+00:03.859  bpy.rna          | WARNING current value '655360' matches no enum in 'FloatProperty', 'lens', 'subtype'
+00:03.875  bpy.rna          | WARNING current value '262144' matches no enum in 'PointerProperty', 'color_ramp', 'subtype'
+00:04.109  bpy.rna          | WARNING current value '65536' matches no enum in 'FloatProperty', 'view_height', 'subtype'
+00:04.109  bpy.rna          | WARNING current value '65536' matches no enum in 'FloatProperty', 'jump_height', 'subtype'
+00:04.125  bpy.rna          | WARNING current value '0' matches no enum in 'EnumProperty', 'addon_filter', 'default'
+00:04.125  bpy.rna          | WARNING current value '0' matches no enum in 'EnumProperty', 'extension_repo_filter', 'default'
+00:04.156  bpy.rna          | WARNING current value '-1' matches no enum in 'EnumProperty', 'brush_type', 'default'
+rna_types 18893
+extra_type_functions 21904
+modules 22689
+DUPLICATES [{"id": "bpy.types.RenderEngine.render", "kinds": ["property", "function"]}]
+{
+  "output": "D:\\MSC AI MODEL\\docs\\rea\\blender-api-catalog.json",
+  "counts": {
+    "operator": 2499,
+    "type": 4012,
+    "property": 10159,
+    "function": 5234,
+    "moduleFunction": 785,
+    "entries": 22689,
+    "enumItems": 38949,
+    "officialTranslatedFields": 13900,
+    "missingTranslationFields": 90079
+  },
+  "phases": {
+    "operatorNamespaces": 77,
+    "operatorsAttempted": 2499,
+    "rnaTypesAttempted": 4012,
+    "nonRnaTypeFunctions": 3011,
+    "modulesRequested": 36,
+    "modulesVisited": 36,
+    "moduleNames": [
+      "bpy",
+      "bpy.context",
+      "bpy.data",
+      "bpy.app",
+      "bpy.app.handlers",
+      "bpy.app.timers",
+      "bpy.app.translations",
+      "bpy.utils",
+      "bpy.utils.previews",
+      "bpy.path",
+      "bpy.props",
+      "bpy.msgbus",
+      "bmesh",
+      "bmesh.ops",
+      "bmesh.utils",
+      "bmesh.geometry",
+      "bmesh.types",
+      "mathutils",
+      "mathutils.geometry",
+      "mathutils.interpolate",
+      "mathutils.bvhtree",
+      "mathutils.kdtree",
+      "mathutils.noise",
+      "gpu",
+      "gpu.state",
+      "gpu.matrix",
+      "gpu.shader",
+      "gpu.texture",
+      "gpu.types",
+      "gpu.capabilities",
+      "gpu.platform",
+      "gpu.select",
+      "gpu.compute",
+      "bpy.utils.units",
+      "blf",
+      "aud"
+    ],
+    "duplicateDiscoveryPaths": [
+      {
+        "id": "bpy.types.RenderEngine.render",
+        "kinds": [
+          "property",
+          "function"
+        ]
+      }
+    ]
+  },
+  "errors": 0
+}
+Blender 5.2.2 LTS (hash d13f752e3b9c built 2026-09-15 01:37:04)
+
+Blender quit

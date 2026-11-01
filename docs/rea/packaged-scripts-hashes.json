@@ -1,0 +1,17 @@
+[
+  {
+    "Algorithm": "SHA256",
+    "Hash": "BDDBBDE9623ADDF0F0AE472F35086D83217D5F03BC9EAFDE47CEC7F5285313BF",
+    "Path": "C:\\Program Files\\Blender Foundation\\Blender 5.2\\5.2\\scripts\\startup\\bl_ui\\space_view3d.py"
+  },
+  {
+    "Algorithm": "SHA256",
+    "Hash": "DA599D40463BDCCFDEBA0CCB8A5F1E77FC88744F677B0CAD9320ABD88CAF99CF",
+    "Path": "C:\\Program Files\\Blender Foundation\\Blender 5.2\\5.2\\scripts\\startup\\bl_ui\\space_text.py"
+  },
+  {
+    "Algorithm": "SHA256",
+    "Hash": "33B570DDF09F92A3DD0FCAEDD5F99568143FC34FC6CD05A9D68E8E043499A4D5",
+    "Path": "C:\\Program Files\\Blender Foundation\\Blender 5.2\\5.2\\scripts\\startup\\bl_ui\\properties_data_modifier.py"
+  }
+]

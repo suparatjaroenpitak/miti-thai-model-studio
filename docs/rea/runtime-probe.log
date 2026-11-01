@@ -1,0 +1,21 @@
+D:\MSC AI MODEL\docs\rea\probe.py:84: DeprecationWarning: 'Material.use_nodes' is expected to be removed in Blender 6.0
+  material.use_nodes = True
+00:01.968  reports          | WARNING Path 'C:\Program Files\Blender Foundation\Blender 5.2\5.2\datafiles\assets\brushes\essentials_brushes-gp_draw.blend' cannot be made relative for Material 'Dots Stroke'
+Blender 5.2.2 LTS (hash d13f752e3b9c built 2026-09-15 01:37:04)
+00:01.968  reports          | WARNING Path 'C:\Program Files\Blender Foundation\Blender 5.2\5.2\datafiles\assets\brushes\essentials_brushes-gp_draw.blend' cannot be made relative for Material 'Material'
+Info: Saved as "probe.blend"
+INFO Draco is available, use library at C:\Program Files\Blender Foundation\Blender 5.2\5.2\scripts\addons_core\io_scene_gltf2\bf_intern_draco_bridge.dll
+INFO MeshOptimizer is available, use library at C:\Program Files\Blender Foundation\Blender 5.2\5.2\scripts\addons_core\io_scene_gltf2\bf_intern_meshopt_bridge.dll
+13:53:02 | INFO: Starting glTF 2.0 export
+13:53:02 | INFO: Extracting primitive: Cube.001
+13:53:02 | INFO: Primitives created: 1
+13:53:02 | INFO: Finished glTF 2.0 export in 0.05022716522216797 s
+
+Info: File exported successfully
+Info: File exported successfully
+REA_RUNTIME_PROBE_COMPLETED D:\MSC AI MODEL\docs\rea\runtime-probe.json
+Writing to D:\MSC AI MODEL\docs\rea\runtime-artifacts\probe.obj
+OBJ export of 'probe.obj' took 5.50 ms
+Timer 'STL Export' took 2.63 ms
+
+Blender quit
