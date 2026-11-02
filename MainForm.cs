@@ -128,6 +128,7 @@ public sealed class MainForm : Form
         Add(file, "ออก", (_, _) => Close(), idleOnly: false);
         var model = new ToolStripMenuItem("โมเดล");
         Add(model, "คลังฟังก์ชัน Blender ภาษาไทย…", (_, _) => ShowApiCatalog(), Keys.Control | Keys.Space);
+        Add(model, "เมนู Blender ทั้งหมด → โค้ดไทย…", (_, _) => ShowWorkbench(), Keys.Control | Keys.Shift | Keys.Space);
         Add(model, "สร้างจากโค้ด", async (_, _) => await BuildModelAsync(), Keys.F5);
         Add(model, "เปิดโมเดลใน Blender", (_, _) => OpenInBlender());
         var windowContext = new ToolStripMenuItem("ใช้บริบทหน้าต่าง Blender ขณะรัน") { CheckOnClick = true };
@@ -217,6 +218,17 @@ public sealed class MainForm : Form
             editor.InsertSnippet(dialog.SelectedCode);
     }
 
+    private void ShowWorkbench()
+    {
+        if (Busy) return;
+        using var dialog = new BlenderWorkbenchForm();
+        if (dialog.ShowDialog(this) == DialogResult.OK && dialog.SelectedCode != null)
+        {
+            editor.InsertSnippet(dialog.SelectedCode);
+            if (dialog.RequiresWindowContext) status.Text = "เพิ่มคำสั่งเมนูแล้ว — คำสั่งนี้ใช้บริบทหน้าต่าง Blender ขณะรัน";
+        }
+    }
+
     private Control BuildViewport()
     {
         var p = new Panel { Dock = DockStyle.Fill, BackColor = Theme.Background };
@@ -232,7 +244,49 @@ public sealed class MainForm : Form
         top.Controls.Add(views); top.Controls.Add(title);
         var info = new Panel { Dock = DockStyle.Bottom, Height = 32, BackColor = Theme.Panel, Padding = new Padding(12, 6, 0, 0) };
         modelLabel.Dock = DockStyle.Fill; info.Controls.Add(modelLabel);
-        p.Controls.Add(viewport); p.Controls.Add(info); p.Controls.Add(top); return p;
+        var sculpt = BuildSculptPanel();
+        var body = new SplitContainer { Dock = DockStyle.Fill, Orientation = Orientation.Vertical, SplitterWidth = 3, BackColor = Theme.Border, FixedPanel = FixedPanel.Panel2 };
+        body.Panel1.Controls.Add(viewport); body.Panel2.Controls.Add(sculpt); body.SplitterDistance = 520;
+        p.Controls.Add(body); p.Controls.Add(info); p.Controls.Add(top); return p;
+    }
+
+    private Control BuildSculptPanel()
+    {
+        var panel = new Panel { Dock = DockStyle.Fill, BackColor = Theme.Panel, Padding = new Padding(10, 10, 10, 8) };
+        var title = Theme.Label("ควบคุมด้วยปุ่ม / พารามิเตอร์", 10, Theme.Text, true); title.Dock = DockStyle.Top; title.Height = 30;
+        var hint = Theme.Label("แทนการลากเมาส์ปั้น — ค่าจะถูกเขียนเป็นโค้ด", 8.5F, Theme.Muted); hint.Dock = DockStyle.Top; hint.Height = 32;
+        var flow = new FlowLayoutPanel { Dock = DockStyle.Fill, FlowDirection = FlowDirection.TopDown, WrapContents = false, AutoScroll = true };
+        AddSculptButton(flow, "โหมดปั้น", "ตั้งโหมด('ปั้น')");
+        AddSculptButton(flow, "โหมดแก้ไข", "ตั้งโหมด('แก้ไข')");
+        AddSculptButton(flow, "เลือกจุดยอด", "โหมดเลือก('จุดยอด')");
+        AddSculptButton(flow, "เลือกขอบ", "โหมดเลือก('ขอบ')");
+        AddSculptButton(flow, "เลือกหน้า", "โหมดเลือก('หน้า')");
+        flow.Controls.Add(Theme.Label("พารามิเตอร์แปรง", 9, Theme.Accent, true));
+        AddParameter(flow, "รัศมี", "ขนาดแปรง", "0.25");
+        AddParameter(flow, "ความแรง", "ความแรงแปรง", "0.5");
+        AddParameter(flow, "การปรับเรียบ", "การปรับเรียบ", "0.25");
+        AddSculptButton(flow, "สร้าง UV แบบสมาร์ต", "สร้างยูวี('สมาร์ต')");
+        AddSculptButton(flow, "เรียก Blender MCP (uvx)", "เชื่อมต่อ Blender MCP ด้วย uvx");
+        panel.Controls.Add(flow); panel.Controls.Add(hint); panel.Controls.Add(title); return panel;
+    }
+
+    private void AddSculptButton(FlowLayoutPanel flow, string label, string code)
+    {
+        var b = Theme.Button(label, (_, _) =>
+        {
+            if (code.StartsWith("เชื่อมต่อ")) { status.Text = "กำหนดคำสั่ง uvx ผ่านเมนู ตั้งค่า หรือ MITI_BLENDER_MCP_UVX แล้วกด F5"; return; }
+            editor.AppendSnippet("# ปุ่มควบคุม: " + label + Environment.NewLine + code + Environment.NewLine);
+            status.Text = "เพิ่มคำสั่ง " + label + " ลงในโค้ดแล้ว — กด F5 เพื่อใช้งาน";
+        });
+        b.Width = 190; b.Height = 30; b.TextAlign = ContentAlignment.MiddleLeft; flow.Controls.Add(b);
+    }
+
+    private void AddParameter(FlowLayoutPanel flow, string label, string thaiName, string defaultValue)
+    {
+        var row = new Panel { Width = 190, Height = 38 };
+        var text = new TextBox { Text = defaultValue, Width = 65, Dock = DockStyle.Right, BackColor = Theme.Raised, ForeColor = Theme.Text, BorderStyle = BorderStyle.FixedSingle };
+        var b = Theme.Button(label, (_, _) => { editor.AppendSnippet($"ตั้งค่าปั้น(\"{thaiName}\", {text.Text})\n"); status.Text = "เพิ่มพารามิเตอร์ " + label; });
+        b.Width = 115; b.Dock = DockStyle.Left; row.Controls.Add(text); row.Controls.Add(b); flow.Controls.Add(row);
     }
 
     private Control BuildOutput()
