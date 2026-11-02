@@ -332,6 +332,7 @@ public sealed class MainForm : Form
     {
         if (Busy) return;
         if ((lastBuild == null || lastBuiltSource != editor.Code) && !await BuildModelAsync()) return;
+        await Task.Delay(5000);
         using var dialog = new SaveFileDialog { Title = "ส่งออกโมเดล", FileName = "โมเดลของฉัน",
             Filter = "โมเดล GLB — Godot / เว็บ (*.glb)|*.glb|โปรเจกต์ Blender (*.blend)|*.blend|โมเดล OBJ (*.obj)|*.obj|งานพิมพ์ 3 มิติ STL (*.stl)|*.stl", AddExtension = true };
         if (dialog.ShowDialog(this) != DialogResult.OK) return;

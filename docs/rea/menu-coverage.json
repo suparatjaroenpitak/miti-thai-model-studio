@@ -1,0 +1,1035 @@
+{
+  "schemaVersion": 1,
+  "blender": {
+    "version": [
+      5,
+      2,
+      2
+    ],
+    "versionString": "5.2.2 LTS",
+    "buildHash": "d13f752e3b9c",
+    "binaryPath": "C:\\Program Files\\Blender Foundation\\Blender 5.2\\blender.exe",
+    "binarySha256": "f141a3c5754500e6f84361099a4cd53f0bb7662b6a0d2cfaaa8fbb63e92234a0"
+  },
+  "counts": {
+    "menus": 579,
+    "sourceMenus": 579,
+    "registeredMenus": 0,
+    "headers": 26,
+    "panels": 1031,
+    "menuActions": 4447,
+    "surfaceActions": 7834,
+    "actions": 12281,
+    "actionKinds": {
+      "operator": 4362,
+      "property": 5777,
+      "menu": 587,
+      "dynamic": 861,
+      "label": 694
+    },
+    "resolvedOperatorActions": 3584,
+    "dynamicOperatorIds": 778,
+    "unavailableOperatorActions": 10
+  },
+  "coverage": {
+    "kind": "shipped-Python-AST-inspection-and-optional-registered-Menu-metadata-not-native-REA-Evidence",
+    "sourceRoot": "C:\\Program Files\\Blender Foundation\\Blender 5.2\\5.2\\scripts\\startup\\bl_ui",
+    "sourceFiles": [
+      {
+        "path": "C:\\Program Files\\Blender Foundation\\Blender 5.2\\5.2\\scripts\\startup\\bl_ui\\__init__.py",
+        "sha256": "d760ac069d973ac500257c9cb2120a7dc97efd8f7ab3f1ebe8cfe47757563f91"
+      },
+      {
+        "path": "C:\\Program Files\\Blender Foundation\\Blender 5.2\\5.2\\scripts\\startup\\bl_ui\\anim.py",
+        "sha256": "ce50de90c4abc679f9b15858746ce8bc26eb3d97cff1a92afa55b99971052ec2"
+      },
+      {
+        "path": "C:\\Program Files\\Blender Foundation\\Blender 5.2\\5.2\\scripts\\startup\\bl_ui\\asset_shelf.py",
+        "sha256": "0c6c2eb277b02f69973ae3bce3b5dff397882d30820e755b6fbeffc67a7e921f"
+      },
+      {
+        "path": "C:\\Program Files\\Blender Foundation\\Blender 5.2\\5.2\\scripts\\startup\\bl_ui\\generic_ui_list.py",
+        "sha256": "1652b4b8b786036a622991208db0dea772296219ee323b05d0466c1efde52972"
+      },
+      {
+        "path": "C:\\Program Files\\Blender Foundation\\Blender 5.2\\5.2\\scripts\\startup\\bl_ui\\node_add_menu.py",
+        "sha256": "adeefb3306bf5520cb680e3803599f27b22c3d79a4844529031b279452be0e9b"
+      },
+      {
+        "path": "C:\\Program Files\\Blender Foundation\\Blender 5.2\\5.2\\scripts\\startup\\bl_ui\\node_add_menu_compositor.py",
+        "sha256": "e32c761eb56c7bd59e750ddaf279e4ebc85575acf6afd0abb99979f5c9ff20df"
+      },
+      {
+        "path": "C:\\Program Files\\Blender Foundation\\Blender 5.2\\5.2\\scripts\\startup\\bl_ui\\node_add_menu_geometry.py",
+        "sha256": "5324d1ffc8b867b18def52582fba021c53cfa8bb19f8d40630ef7c7b89ce84d2"
+      },
+      {
+        "path": "C:\\Program Files\\Blender Foundation\\Blender 5.2\\5.2\\scripts\\startup\\bl_ui\\node_add_menu_shader.py",
+        "sha256": "5fff14ff8fb544e453972ae2e3eb1ed07b15607bb11834e1c5a89a377c5812ba"
+      },
+      {
+        "path": "C:\\Program Files\\Blender Foundation\\Blender 5.2\\5.2\\scripts\\startup\\bl_ui\\node_add_menu_texture.py",
+        "sha256": "38376ade38aa4bfa1b9d8c274bf8cf454f16bdfb4213736c1eda124bf5e81177"
+      },
+      {
+        "path": "C:\\Program Files\\Blender Foundation\\Blender 5.2\\5.2\\scripts\\startup\\bl_ui\\properties_animviz.py",
+        "sha256": "9e27a84c7a2f673a7293bf8bb8da7f698ddfc923a583a341b27fe2e3df6aaab5"
+      },
+      {
+        "path": "C:\\Program Files\\Blender Foundation\\Blender 5.2\\5.2\\scripts\\startup\\bl_ui\\properties_collection.py",
+        "sha256": "dab18af3e1147efc85624ba3e3c03977f604a67506175a394eeaa0d86f7e000e"
+      },
+      {
+        "path": "C:\\Program Files\\Blender Foundation\\Blender 5.2\\5.2\\scripts\\startup\\bl_ui\\properties_constraint.py",
+        "sha256": "906ee3d79271f5320b301aa31cfa9bc4b3a8197e119d7ace3f781fddcd4db707"
+      },
+      {
+        "path": "C:\\Program Files\\Blender Foundation\\Blender 5.2\\5.2\\scripts\\startup\\bl_ui\\properties_data_armature.py",
+        "sha256": "457eda4a9e1d568530fb328f5a2c9e86fbb0ec8cec71b1d410e5a6d786bd627b"
+      },
+      {
+        "path": "C:\\Program Files\\Blender Foundation\\Blender 5.2\\5.2\\scripts\\startup\\bl_ui\\properties_data_bone.py",
+        "sha256": "9edeaba5d86aadb72f1253da260fd18ac3b06f23c4ac03805842b5f50c63b99e"
+      },
+      {
+        "path": "C:\\Program Files\\Blender Foundation\\Blender 5.2\\5.2\\scripts\\startup\\bl_ui\\properties_data_camera.py",
+        "sha256": "954926e726e6f236fd02f793f79519763e2cfdbc5a41d65789d126b431b93100"
+      },
+      {
+        "path": "C:\\Program Files\\Blender Foundation\\Blender 5.2\\5.2\\scripts\\startup\\bl_ui\\properties_data_curve.py",
+        "sha256": "96b7765aa82a15340ac8284abbd34bd7c77b0a90672f9812034172f7c1c621b6"
+      },
+      {
+        "path": "C:\\Program Files\\Blender Foundation\\Blender 5.2\\5.2\\scripts\\startup\\bl_ui\\properties_data_curves.py",
+        "sha256": "db0b6f629fd47949283ef3d339aa7df15f25a654d401f59279bf99fc5252f287"
+      },
+      {
+        "path": "C:\\Program Files\\Blender Foundation\\Blender 5.2\\5.2\\scripts\\startup\\bl_ui\\properties_data_empty.py",
+        "sha256": "652ddb318241d4bced2940f4996c8b928d74aa9080634f349f735d304860a920"
+      },
+      {
+        "path": "C:\\Program Files\\Blender Foundation\\Blender 5.2\\5.2\\scripts\\startup\\bl_ui\\properties_data_grease_pencil.py",
+        "sha256": "1dcd4bcd04f06f4bbbd6782ca0348b5b842a3cb6b9041e0e0961c742fb27951c"
+      },
+      {
+        "path": "C:\\Program Files\\Blender Foundation\\Blender 5.2\\5.2\\scripts\\startup\\bl_ui\\properties_data_lattice.py",
+        "sha256": "987f329d1b725ef38996751b1eb252a13436ef6b5de8f39a3ad2b291258c2270"
+      },
+      {
+        "path": "C:\\Program Files\\Blender Foundation\\Blender 5.2\\5.2\\scripts\\startup\\bl_ui\\properties_data_light.py",
+        "sha256": "76e85145a3930184342b14c5ed508b299bc89d0f30ea7d566eb500b6205c5500"
+      },
+      {
+        "path": "C:\\Program Files\\Blender Foundation\\Blender 5.2\\5.2\\scripts\\startup\\bl_ui\\properties_data_lightprobe.py",
+        "sha256": "4fcf07c125989ec7758c0274ecaa39b2d0f073f07f9009a1c88001523b5d0463"
+      },
+      {
+        "path": "C:\\Program Files\\Blender Foundation\\Blender 5.2\\5.2\\scripts\\startup\\bl_ui\\properties_data_mesh.py",
+        "sha256": "abf6809a606131a7c1e6a4c907abe0c2a0cb3735070620b6dc9044fe95cc4d20"
+      },
+      {
+        "path": "C:\\Program Files\\Blender Foundation\\Blender 5.2\\5.2\\scripts\\startup\\bl_ui\\properties_data_metaball.py",
+        "sha256": "3a831a7dbcf8755e8114124901e04ee8cc7156b107d4f1a3762513fb55497212"
+      },
+      {
+        "path": "C:\\Program Files\\Blender Foundation\\Blender 5.2\\5.2\\scripts\\startup\\bl_ui\\properties_data_modifier.py",
+        "sha256": "33b570ddf09f92a3dd0fcaedd5f99568143fc34fc6cd05a9d68e8e043499a4d5"
+      },
+      {
+        "path": "C:\\Program Files\\Blender Foundation\\Blender 5.2\\5.2\\scripts\\startup\\bl_ui\\properties_data_pointcloud.py",
+        "sha256": "f0fa3df1b266342e6bcc12267425cef31aa2ab779d62d82d4605cd5b4c229358"
+      },
+      {
+        "path": "C:\\Program Files\\Blender Foundation\\Blender 5.2\\5.2\\scripts\\startup\\bl_ui\\properties_data_shaderfx.py",
+        "sha256": "b53f889a50645164daf01204f394276c8d9a934c80c0fd1c026f7bd9a739209d"
+      },
+      {
+        "path": "C:\\Program Files\\Blender Foundation\\Blender 5.2\\5.2\\scripts\\startup\\bl_ui\\properties_data_speaker.py",
+        "sha256": "1dd63b2cf99741b1c8c9a1c0e8342dedf9cdf23eab2a4f902123999de3bfc200"
+      },
+      {
+        "path": "C:\\Program Files\\Blender Foundation\\Blender 5.2\\5.2\\scripts\\startup\\bl_ui\\properties_data_volume.py",
+        "sha256": "c77870994bb0a23535031904f9f51b3d8b0c34baeb4aad107e752006c9db4cc0"
+      },
+      {
+        "path": "C:\\Program Files\\Blender Foundation\\Blender 5.2\\5.2\\scripts\\startup\\bl_ui\\properties_freestyle.py",
+        "sha256": "e1b2ab556e620865ac5f54f97337616e50b21d3aa93695cfe1405ec0abd42897"
+      },
+      {
+        "path": "C:\\Program Files\\Blender Foundation\\Blender 5.2\\5.2\\scripts\\startup\\bl_ui\\properties_grease_pencil_common.py",
+        "sha256": "c0fe53311cdb949ee1b502a38e37454132c0bbc683c60322dedb81e523c31195"
+      },
+      {
+        "path": "C:\\Program Files\\Blender Foundation\\Blender 5.2\\5.2\\scripts\\startup\\bl_ui\\properties_mask_common.py",
+        "sha256": "5fb4fc848f528a811fe57bb3df32c0e1e0fb7087e4d2c95557cba9f2d0381281"
+      },
+      {
+        "path": "C:\\Program Files\\Blender Foundation\\Blender 5.2\\5.2\\scripts\\startup\\bl_ui\\properties_material.py",
+        "sha256": "45665b0ea613b221dcab780ad0ac3e7ec51f2a19b46fc8d3529d6001277b7130"
+      },
+      {
+        "path": "C:\\Program Files\\Blender Foundation\\Blender 5.2\\5.2\\scripts\\startup\\bl_ui\\properties_material_gpencil.py",
+        "sha256": "60347bf6d18d3a4cc83f2dbad1eb8b681ef81c0381141b4b9d50222cb391f721"
+      },
+      {
+        "path": "C:\\Program Files\\Blender Foundation\\Blender 5.2\\5.2\\scripts\\startup\\bl_ui\\properties_object.py",
+        "sha256": "84ce292df3b33f9ca7bf05924e37012cd9e1e8a2e294c11e2aec9d9d9d79ae00"
+      },
+      {
+        "path": "C:\\Program Files\\Blender Foundation\\Blender 5.2\\5.2\\scripts\\startup\\bl_ui\\properties_output.py",
+        "sha256": "18ebb6308b7af25635a0768cc2e3fdc19c873af7caa030223b1e6f12c852926c"
+      },
+      {
+        "path": "C:\\Program Files\\Blender Foundation\\Blender 5.2\\5.2\\scripts\\startup\\bl_ui\\properties_paint_common.py",
+        "sha256": "b5d445c02737b2191b584e53df4d9db17c864d4cd7f23a800bdfd099978bfa68"
+      },
+      {
+        "path": "C:\\Program Files\\Blender Foundation\\Blender 5.2\\5.2\\scripts\\startup\\bl_ui\\properties_particle.py",
+        "sha256": "89a07e39fde98af5f6a8fc779108c27403a20e0798767bc11981ce4772a1d689"
+      },
+      {
+        "path": "C:\\Program Files\\Blender Foundation\\Blender 5.2\\5.2\\scripts\\startup\\bl_ui\\properties_physics_cloth.py",
+        "sha256": "195b940e5029e84536ddbc75baa5e548732e90191903cac24bc61e52332b5258"
+      },
+      {
+        "path": "C:\\Program Files\\Blender Foundation\\Blender 5.2\\5.2\\scripts\\startup\\bl_ui\\properties_physics_common.py",
+        "sha256": "fb66670e0e6ddd18b78ad2fc508bad9fc14d7e2589fee1f4f37943076254f287"
+      },
+      {
+        "path": "C:\\Program Files\\Blender Foundation\\Blender 5.2\\5.2\\scripts\\startup\\bl_ui\\properties_physics_dynamicpaint.py",
+        "sha256": "ea6ba554510e75bbbc9c96484dff76df18c60411075fcc4695200206268a11b0"
+      },
+      {
+        "path": "C:\\Program Files\\Blender Foundation\\Blender 5.2\\5.2\\scripts\\startup\\bl_ui\\properties_physics_field.py",
+        "sha256": "9150b225dd89c55aee4bdf82120280e7484a516d7b61c1a5a5729e9d3eea832b"
+      },
+      {
+        "path": "C:\\Program Files\\Blender Foundation\\Blender 5.2\\5.2\\scripts\\startup\\bl_ui\\properties_physics_fluid.py",
+        "sha256": "93bcf157a41fdd5d2d32f8965763f2182ff1cf74c43c0dddf561f10d887582f2"
+      },
+      {
+        "path": "C:\\Program Files\\Blender Foundation\\Blender 5.2\\5.2\\scripts\\startup\\bl_ui\\properties_physics_geometry_nodes.py",
+        "sha256": "52cbed608171fb3e1c251e1a78375c937bebe9b9d32164dfaeee5ac992930e4f"
+      },
+      {
+        "path": "C:\\Program Files\\Blender Foundation\\Blender 5.2\\5.2\\scripts\\startup\\bl_ui\\properties_physics_rigidbody.py",
+        "sha256": "15798e77c8c74f18e864af19a1bff2dadc5418977ecb09ea7ac64883e3fe266a"
+      },
+      {
+        "path": "C:\\Program Files\\Blender Foundation\\Blender 5.2\\5.2\\scripts\\startup\\bl_ui\\properties_physics_rigidbody_constraint.py",
+        "sha256": "3ce50b1c6ae1ee75d71eb58ceb632c438ce364cefb38607a4495093a774e39b0"
+      },
+      {
+        "path": "C:\\Program Files\\Blender Foundation\\Blender 5.2\\5.2\\scripts\\startup\\bl_ui\\properties_physics_softbody.py",
+        "sha256": "397f91b52039395dcacaba875d30ef1cab0b45710c4ece3001bb25606f87f7da"
+      },
+      {
+        "path": "C:\\Program Files\\Blender Foundation\\Blender 5.2\\5.2\\scripts\\startup\\bl_ui\\properties_render.py",
+        "sha256": "2073e4fdff801feaa9f10f5df5645a8172af07cc899837415b1efbc6c619f5a9"
+      },
+      {
+        "path": "C:\\Program Files\\Blender Foundation\\Blender 5.2\\5.2\\scripts\\startup\\bl_ui\\properties_scene.py",
+        "sha256": "d1d802246e07905e750cddb67f748bc6d6965ba3eaf10ab021151eaf5bdd0940"
+      },
+      {
+        "path": "C:\\Program Files\\Blender Foundation\\Blender 5.2\\5.2\\scripts\\startup\\bl_ui\\properties_strip.py",
+        "sha256": "f8d0cf6b1ce4891cbc0a31d04ecfe0eb8a3c46223340a4635006645eab903c9c"
+      },
+      {
+        "path": "C:\\Program Files\\Blender Foundation\\Blender 5.2\\5.2\\scripts\\startup\\bl_ui\\properties_strip_modifier.py",
+        "sha256": "ed72108e5977c10f63370107cfdd2f8fdf376cf87e2b939c8da2dd222bfea684"
+      },
+      {
+        "path": "C:\\Program Files\\Blender Foundation\\Blender 5.2\\5.2\\scripts\\startup\\bl_ui\\properties_texture.py",
+        "sha256": "00e4eb5bbe2674461c51849506628b1fc94410574abb2d4f93a0b8504ef25ed3"
+      },
+      {
+        "path": "C:\\Program Files\\Blender Foundation\\Blender 5.2\\5.2\\scripts\\startup\\bl_ui\\properties_view_layer.py",
+        "sha256": "950a50f5f2f1ff5ce8fd5b4c59300388260fd753a17b800da1aed7cfb2a3c785"
+      },
+      {
+        "path": "C:\\Program Files\\Blender Foundation\\Blender 5.2\\5.2\\scripts\\startup\\bl_ui\\properties_workspace.py",
+        "sha256": "5addc7171aeca9aaadde475ded3f439d1bc7c277763b56ad70bc537796bc47d6"
+      },
+      {
+        "path": "C:\\Program Files\\Blender Foundation\\Blender 5.2\\5.2\\scripts\\startup\\bl_ui\\properties_world.py",
+        "sha256": "ec3bed7265d6ea9af831c42716476e88f06692092ec22998173ad55bdfc7dca4"
+      },
+      {
+        "path": "C:\\Program Files\\Blender Foundation\\Blender 5.2\\5.2\\scripts\\startup\\bl_ui\\space_clip.py",
+        "sha256": "0837a6c1eb853955c114cefc65bb58174f2a5af972f4006743ea31bbcc32c39e"
+      },
+      {
+        "path": "C:\\Program Files\\Blender Foundation\\Blender 5.2\\5.2\\scripts\\startup\\bl_ui\\space_console.py",
+        "sha256": "88fdc8fb440221453de4292c3fe0cf7c519aa232678fb6579d79665a6fb0b3c9"
+      },
+      {
+        "path": "C:\\Program Files\\Blender Foundation\\Blender 5.2\\5.2\\scripts\\startup\\bl_ui\\space_dopesheet.py",
+        "sha256": "70fa258e6c777122c2baa74435d560262fd5990983f6046ab984ff728d8183de"
+      },
+      {
+        "path": "C:\\Program Files\\Blender Foundation\\Blender 5.2\\5.2\\scripts\\startup\\bl_ui\\space_filebrowser.py",
+        "sha256": "35b4310faef81f39be669f6bc1750b5410bcea5bac0493e79f1901e4f9f48565"
+      },
+      {
+        "path": "C:\\Program Files\\Blender Foundation\\Blender 5.2\\5.2\\scripts\\startup\\bl_ui\\space_graph.py",
+        "sha256": "1a04706d82ef8bbc69f91b98d76c62c2f237e4f7a893dab59107cf0bb8121bb2"
+      },
+      {
+        "path": "C:\\Program Files\\Blender Foundation\\Blender 5.2\\5.2\\scripts\\startup\\bl_ui\\space_image.py",
+        "sha256": "2a8f659ecff6c5c66a9d28aad3636c32ac9895bec0986f2263b2d6e084f9aa82"
+      },
+      {
+        "path": "C:\\Program Files\\Blender Foundation\\Blender 5.2\\5.2\\scripts\\startup\\bl_ui\\space_info.py",
+        "sha256": "ca4b3c9573c22853ee54db5339d38e4fd31ec5b8e4169a4957e5b826ee372181"
+      },
+      {
+        "path": "C:\\Program Files\\Blender Foundation\\Blender 5.2\\5.2\\scripts\\startup\\bl_ui\\space_nla.py",
+        "sha256": "a67edd2a10ce912afeddec026a9acc1d03bb305438fcbaa9059d7ac93afd5962"
+      },
+      {
+        "path": "C:\\Program Files\\Blender Foundation\\Blender 5.2\\5.2\\scripts\\startup\\bl_ui\\space_node.py",
+        "sha256": "345cfac5732ad214f9b84f3602c4719c529b2da837aed45050fe5acb55ec0fa0"
+      },
+      {
+        "path": "C:\\Program Files\\Blender Foundation\\Blender 5.2\\5.2\\scripts\\startup\\bl_ui\\space_outliner.py",
+        "sha256": "6bc684abbf31f5b2015c50456911a6f301666ebeb1112f81933a216ddc160793"
+      },
+      {
+        "path": "C:\\Program Files\\Blender Foundation\\Blender 5.2\\5.2\\scripts\\startup\\bl_ui\\space_properties.py",
+        "sha256": "2dbd2b2750715d248ebaf8bd0f74efc1899242ee64093f8a0b24a69ff4c0d3ce"
+      },
+      {
+        "path": "C:\\Program Files\\Blender Foundation\\Blender 5.2\\5.2\\scripts\\startup\\bl_ui\\space_sequencer.py",
+        "sha256": "d541d0381c9daa9573fcfe203fed3a4c2056e7282991597135148ffddddca4b5"
+      },
+      {
+        "path": "C:\\Program Files\\Blender Foundation\\Blender 5.2\\5.2\\scripts\\startup\\bl_ui\\space_spreadsheet.py",
+        "sha256": "0c06408fc87bd764573a26da3da59ea5d731888baded457dd49a30eca2c0de4b"
+      },
+      {
+        "path": "C:\\Program Files\\Blender Foundation\\Blender 5.2\\5.2\\scripts\\startup\\bl_ui\\space_statusbar.py",
+        "sha256": "d43aea937c586d54009785e9bcb8e38d48aa10d723a5ea14d34d053e8f2dcc3e"
+      },
+      {
+        "path": "C:\\Program Files\\Blender Foundation\\Blender 5.2\\5.2\\scripts\\startup\\bl_ui\\space_text.py",
+        "sha256": "da599d40463bdccfdeba0ccb8a5f1e77fc88744f677b0cad9320abd88caf99cf"
+      },
+      {
+        "path": "C:\\Program Files\\Blender Foundation\\Blender 5.2\\5.2\\scripts\\startup\\bl_ui\\space_time.py",
+        "sha256": "78e7e7c53a3528e3088ca8298f282e64e75ae929d2f383ee7d364bcee045713e"
+      },
+      {
+        "path": "C:\\Program Files\\Blender Foundation\\Blender 5.2\\5.2\\scripts\\startup\\bl_ui\\space_toolsystem_common.py",
+        "sha256": "d28777bdfa7e72e8d6c203a02f657f6d9ce98457f0b1c4af2cbb548172371b1e"
+      },
+      {
+        "path": "C:\\Program Files\\Blender Foundation\\Blender 5.2\\5.2\\scripts\\startup\\bl_ui\\space_toolsystem_toolbar.py",
+        "sha256": "fe9185f8fe063ce18f38368ac63a269cbc3d63adbb693ea2e4db29c2bd992502"
+      },
+      {
+        "path": "C:\\Program Files\\Blender Foundation\\Blender 5.2\\5.2\\scripts\\startup\\bl_ui\\space_topbar.py",
+        "sha256": "09900734a729df25f4bf4f699513385a33976ec5c5c94914ed218850fe901705"
+      },
+      {
+        "path": "C:\\Program Files\\Blender Foundation\\Blender 5.2\\5.2\\scripts\\startup\\bl_ui\\space_userpref.py",
+        "sha256": "036c4187e9d93a4d1013727ff673db5d0bf403fe6d211832551a50c2aaf4eb1c"
+      },
+      {
+        "path": "C:\\Program Files\\Blender Foundation\\Blender 5.2\\5.2\\scripts\\startup\\bl_ui\\space_view3d.py",
+        "sha256": "bddbbde9623addf0f0ae472f35086d83217d5f03bc9eafde47cec7f5285313bf"
+      },
+      {
+        "path": "C:\\Program Files\\Blender Foundation\\Blender 5.2\\5.2\\scripts\\startup\\bl_ui\\space_view3d_sidebar.py",
+        "sha256": "0712a14f1793107570c10c52d18b5c050f094473c38e22dbcf55cb0758f03d5e"
+      },
+      {
+        "path": "C:\\Program Files\\Blender Foundation\\Blender 5.2\\5.2\\scripts\\startup\\bl_ui\\space_view3d_toolbar.py",
+        "sha256": "9263d922655b5ce7e99c2135bff9cb6cda3d888e82cc04058632c159088e65b6"
+      },
+      {
+        "path": "C:\\Program Files\\Blender Foundation\\Blender 5.2\\5.2\\scripts\\startup\\bl_ui\\utils.py",
+        "sha256": "240f33f1cecbab287395609852f6a1430bb47faf00e351306a178956a7a69f29"
+      }
+    ],
+    "sourceMenuClasses": [
+      "ANIM_MT_keyframe_insert_pie",
+      "ARMATURE_MT_collection_context_menu",
+      "ARMATURE_MT_collection_tree_context_menu",
+      "ASSETBROWSER_MT_catalog",
+      "ASSETBROWSER_MT_context_menu",
+      "ASSETBROWSER_MT_editor_menus",
+      "ASSETBROWSER_MT_library",
+      "ASSETBROWSER_MT_metadata_preview_menu",
+      "ASSETBROWSER_MT_select",
+      "ASSETBROWSER_MT_view",
+      "AddNodeMenu",
+      "CLIP_MT_clip",
+      "CLIP_MT_marker_pie",
+      "CLIP_MT_masking_editor_menus",
+      "CLIP_MT_pivot_pie",
+      "CLIP_MT_plane_track_image_context_menu",
+      "CLIP_MT_proxy",
+      "CLIP_MT_reconstruction",
+      "CLIP_MT_reconstruction_pie",
+      "CLIP_MT_select",
+      "CLIP_MT_select_graph",
+      "CLIP_MT_select_grouped",
+      "CLIP_MT_solving_pie",
+      "CLIP_MT_stabilize_2d_context_menu",
+      "CLIP_MT_stabilize_2d_rotation_context_menu",
+      "CLIP_MT_track",
+      "CLIP_MT_track_animation",
+      "CLIP_MT_track_cleanup",
+      "CLIP_MT_track_clear",
+      "CLIP_MT_track_motion",
+      "CLIP_MT_track_refine",
+      "CLIP_MT_track_transform",
+      "CLIP_MT_track_visibility",
+      "CLIP_MT_tracking_context_menu",
+      "CLIP_MT_tracking_editor_menus",
+      "CLIP_MT_tracking_pie",
+      "CLIP_MT_view",
+      "CLIP_MT_view_pie",
+      "CLIP_MT_view_zoom",
+      "COLLECTION_MT_context_menu",
+      "COLLECTION_MT_context_menu_instance_offset",
+      "CONSOLE_MT_console",
+      "CONSOLE_MT_context_menu",
+      "CONSOLE_MT_editor_menus",
+      "CONSOLE_MT_language",
+      "CONSOLE_MT_view",
+      "CURVES_MT_add_attribute",
+      "CURVES_MT_attribute_context_menu",
+      "DOPESHEET_MT_action",
+      "DOPESHEET_MT_cache",
+      "DOPESHEET_MT_channel",
+      "DOPESHEET_MT_channel_context_menu",
+      "DOPESHEET_MT_context_menu",
+      "DOPESHEET_MT_delete",
+      "DOPESHEET_MT_editor_menus",
+      "DOPESHEET_MT_gpencil_channel",
+      "DOPESHEET_MT_key",
+      "DOPESHEET_MT_key_transform",
+      "DOPESHEET_MT_marker",
+      "DOPESHEET_MT_select",
+      "DOPESHEET_MT_snap_pie",
+      "DOPESHEET_MT_view",
+      "DOPESHEET_MT_view_pie",
+      "FILEBROWSER_MT_bookmarks_context_menu",
+      "FILEBROWSER_MT_bookmarks_recents_specials_menu",
+      "FILEBROWSER_MT_context_menu",
+      "FILEBROWSER_MT_editor_menus",
+      "FILEBROWSER_MT_select",
+      "FILEBROWSER_MT_view",
+      "FILEBROWSER_MT_view_pie",
+      "GRAPH_MT_channel",
+      "GRAPH_MT_context_menu",
+      "GRAPH_MT_delete",
+      "GRAPH_MT_editor_menus",
+      "GRAPH_MT_key",
+      "GRAPH_MT_key_blending",
+      "GRAPH_MT_key_density",
+      "GRAPH_MT_key_smoothing",
+      "GRAPH_MT_key_snap",
+      "GRAPH_MT_key_transform",
+      "GRAPH_MT_marker",
+      "GRAPH_MT_pivot_pie",
+      "GRAPH_MT_select",
+      "GRAPH_MT_snap_pie",
+      "GRAPH_MT_view",
+      "GRAPH_MT_view_pie",
+      "GREASE_PENCIL_MT_Layers",
+      "GREASE_PENCIL_MT_draw_delete",
+      "GREASE_PENCIL_MT_grease_pencil_add_layer_extra",
+      "GREASE_PENCIL_MT_group_context_menu",
+      "GREASE_PENCIL_MT_layer_active",
+      "GREASE_PENCIL_MT_layer_group",
+      "GREASE_PENCIL_MT_layer_mask_add",
+      "GREASE_PENCIL_MT_material_context_menu",
+      "GREASE_PENCIL_MT_move_to_layer",
+      "GREASE_PENCIL_MT_move_to_layer_SEARCH",
+      "GREASE_PENCIL_MT_snap",
+      "GREASE_PENCIL_MT_snap_pie",
+      "GREASE_PENCIL_MT_stroke_simplify",
+      "IMAGE_MT_editor_menus",
+      "IMAGE_MT_image",
+      "IMAGE_MT_image_invert",
+      "IMAGE_MT_image_transform",
+      "IMAGE_MT_mask_context_menu",
+      "IMAGE_MT_pivot_pie",
+      "IMAGE_MT_select",
+      "IMAGE_MT_select_all_by_trait",
+      "IMAGE_MT_select_linked",
+      "IMAGE_MT_uvs",
+      "IMAGE_MT_uvs_align",
+      "IMAGE_MT_uvs_context_menu",
+      "IMAGE_MT_uvs_merge",
+      "IMAGE_MT_uvs_mirror",
+      "IMAGE_MT_uvs_select_mode",
+      "IMAGE_MT_uvs_showhide",
+      "IMAGE_MT_uvs_snap",
+      "IMAGE_MT_uvs_snap_pie",
+      "IMAGE_MT_uvs_split",
+      "IMAGE_MT_uvs_transform",
+      "IMAGE_MT_uvs_unwrap",
+      "IMAGE_MT_view",
+      "IMAGE_MT_view_pie",
+      "IMAGE_MT_view_zoom",
+      "INFO_MT_area",
+      "INFO_MT_context_menu",
+      "INFO_MT_editor_menus",
+      "INFO_MT_info",
+      "INFO_MT_view",
+      "MASK_MT_add",
+      "MASK_MT_animation",
+      "MASK_MT_mask",
+      "MASK_MT_move_to_layer",
+      "MASK_MT_select",
+      "MASK_MT_transform",
+      "MASK_MT_visibility",
+      "MATERIAL_MT_context_menu",
+      "MESH_MT_attribute_context_menu",
+      "MESH_MT_color_attribute_context_menu",
+      "MESH_MT_shape_key_context_menu",
+      "MESH_MT_shape_key_tree_context_menu",
+      "MESH_MT_vertex_group_context_menu",
+      "NLA_MT_add",
+      "NLA_MT_channel_context_menu",
+      "NLA_MT_context_menu",
+      "NLA_MT_editor_menus",
+      "NLA_MT_marker",
+      "NLA_MT_marker_select",
+      "NLA_MT_select",
+      "NLA_MT_snap_pie",
+      "NLA_MT_strips",
+      "NLA_MT_strips_transform",
+      "NLA_MT_tracks",
+      "NLA_MT_view",
+      "NLA_MT_view_pie",
+      "NODE_MT_add",
+      "NODE_MT_category_utilities_bundle_base",
+      "NODE_MT_category_utilities_closure_base",
+      "NODE_MT_compositor_node_all_base",
+      "NODE_MT_compositor_node_color_adjust_base",
+      "NODE_MT_compositor_node_color_base",
+      "NODE_MT_compositor_node_color_mix_base",
+      "NODE_MT_compositor_node_creative_base",
+      "NODE_MT_compositor_node_filter_base",
+      "NODE_MT_compositor_node_filter_blur_base",
+      "NODE_MT_compositor_node_input_base",
+      "NODE_MT_compositor_node_input_constant_base",
+      "NODE_MT_compositor_node_input_scene_base",
+      "NODE_MT_compositor_node_keying_base",
+      "NODE_MT_compositor_node_mask_base",
+      "NODE_MT_compositor_node_math_base",
+      "NODE_MT_compositor_node_output_base",
+      "NODE_MT_compositor_node_rotation_base",
+      "NODE_MT_compositor_node_text_base",
+      "NODE_MT_compositor_node_texture_base",
+      "NODE_MT_compositor_node_tracking_base",
+      "NODE_MT_compositor_node_transform_base",
+      "NODE_MT_compositor_node_utilities_base",
+      "NODE_MT_compositor_node_vector_base",
+      "NODE_MT_compositor_utilities_matrix_base",
+      "NODE_MT_context_menu",
+      "NODE_MT_context_menu_select_menu",
+      "NODE_MT_context_menu_show_hide_menu",
+      "NODE_MT_editor_menus",
+      "NODE_MT_gn_all_base",
+      "NODE_MT_gn_attribute_base",
+      "NODE_MT_gn_color_base",
+      "NODE_MT_gn_curve_base",
+      "NODE_MT_gn_curve_operations_base",
+      "NODE_MT_gn_curve_primitives_base",
+      "NODE_MT_gn_curve_read_base",
+      "NODE_MT_gn_curve_sample_base",
+      "NODE_MT_gn_curve_topology_base",
+      "NODE_MT_gn_curve_write_base",
+      "NODE_MT_gn_geometry_base",
+      "NODE_MT_gn_geometry_operations_base",
+      "NODE_MT_gn_geometry_read_base",
+      "NODE_MT_gn_geometry_sample_base",
+      "NODE_MT_gn_geometry_write_base",
+      "NODE_MT_gn_grease_pencil_base",
+      "NODE_MT_gn_grease_pencil_operations_base",
+      "NODE_MT_gn_grease_pencil_read_base",
+      "NODE_MT_gn_grease_pencil_write_base",
+      "NODE_MT_gn_input_base",
+      "NODE_MT_gn_input_constant_base",
+      "NODE_MT_gn_input_gizmo_base",
+      "NODE_MT_gn_input_group_base",
+      "NODE_MT_gn_input_import_base",
+      "NODE_MT_gn_input_scene_base",
+      "NODE_MT_gn_instance_base",
+      "NODE_MT_gn_material_base",
+      "NODE_MT_gn_mesh_base",
+      "NODE_MT_gn_mesh_operations_base",
+      "NODE_MT_gn_mesh_primitives_base",
+      "NODE_MT_gn_mesh_read_base",
+      "NODE_MT_gn_mesh_sample_base",
+      "NODE_MT_gn_mesh_topology_base",
+      "NODE_MT_gn_mesh_uv_base",
+      "NODE_MT_gn_mesh_write_base",
+      "NODE_MT_gn_output_base",
+      "NODE_MT_gn_point_base",
+      "NODE_MT_gn_simulation_base",
+      "NODE_MT_gn_texture_base",
+      "NODE_MT_gn_utilities_base",
+      "NODE_MT_gn_utilities_deprecated_base",
+      "NODE_MT_gn_utilities_field_base",
+      "NODE_MT_gn_utilities_list_base",
+      "NODE_MT_gn_utilities_math_base",
+      "NODE_MT_gn_utilities_matrix_base",
+      "NODE_MT_gn_utilities_rotation_base",
+      "NODE_MT_gn_utilities_sound_base",
+      "NODE_MT_gn_utilities_text_base",
+      "NODE_MT_gn_utilities_vector_base",
+      "NODE_MT_gn_volume_base",
+      "NODE_MT_gn_volume_operations_base",
+      "NODE_MT_gn_volume_primitives_base",
+      "NODE_MT_gn_volume_read_base",
+      "NODE_MT_gn_volume_sample_base",
+      "NODE_MT_gn_volume_write_base",
+      "NODE_MT_group_base",
+      "NODE_MT_layout_base",
+      "NODE_MT_linked_group_base",
+      "NODE_MT_node",
+      "NODE_MT_node_color_context_menu",
+      "NODE_MT_node_tree_interface_context_menu",
+      "NODE_MT_node_tree_interface_new_item",
+      "NODE_MT_select",
+      "NODE_MT_shader_node_all_base",
+      "NODE_MT_shader_node_color_base",
+      "NODE_MT_shader_node_displacement_base",
+      "NODE_MT_shader_node_input_base",
+      "NODE_MT_shader_node_input_constant_base",
+      "NODE_MT_shader_node_math_base",
+      "NODE_MT_shader_node_output_base",
+      "NODE_MT_shader_node_shader_base",
+      "NODE_MT_shader_node_texture_base",
+      "NODE_MT_shader_node_utilities_base",
+      "NODE_MT_shader_node_vector_base",
+      "NODE_MT_swap",
+      "NODE_MT_texture_node_all_base",
+      "NODE_MT_texture_node_color_base",
+      "NODE_MT_texture_node_converter_base",
+      "NODE_MT_texture_node_distort_base",
+      "NODE_MT_texture_node_input_base",
+      "NODE_MT_texture_node_output_base",
+      "NODE_MT_texture_node_pattern_base",
+      "NODE_MT_texture_node_texture_base",
+      "NODE_MT_view",
+      "NODE_MT_view_pie",
+      "NodeMenu",
+      "OBJECT_MT_light_linking_context_menu",
+      "OBJECT_MT_modifier_add",
+      "OBJECT_MT_modifier_add_color",
+      "OBJECT_MT_modifier_add_deform",
+      "OBJECT_MT_modifier_add_edit",
+      "OBJECT_MT_modifier_add_generate",
+      "OBJECT_MT_modifier_add_normals",
+      "OBJECT_MT_modifier_add_physics",
+      "OBJECT_MT_shadow_linking_context_menu",
+      "OUTLINER_MT_asset",
+      "OUTLINER_MT_collection",
+      "OUTLINER_MT_collection_new",
+      "OUTLINER_MT_collection_view_layer",
+      "OUTLINER_MT_collection_visibility",
+      "OUTLINER_MT_context_menu",
+      "OUTLINER_MT_context_menu_view",
+      "OUTLINER_MT_edit_datablocks",
+      "OUTLINER_MT_editor_menus",
+      "OUTLINER_MT_id_data",
+      "OUTLINER_MT_liboverride",
+      "OUTLINER_MT_object",
+      "OUTLINER_MT_view_pie",
+      "PARTICLE_MT_context_menu",
+      "POINTCLOUD_MT_add_attribute",
+      "POINTCLOUD_MT_attribute_context_menu",
+      "POSE_MT_selection_set_create",
+      "POSE_MT_selection_sets_context_menu",
+      "POSE_MT_selection_sets_select",
+      "RENDER_MT_framerate_presets",
+      "RENDER_MT_lineset_context_menu",
+      "RENDER_MT_pixeldensity_presets",
+      "SEQUENCER_MT_add",
+      "SEQUENCER_MT_add_effect",
+      "SEQUENCER_MT_add_empty",
+      "SEQUENCER_MT_add_transitions",
+      "SEQUENCER_MT_change",
+      "SEQUENCER_MT_color_tag_picker",
+      "SEQUENCER_MT_context_menu",
+      "SEQUENCER_MT_editor_menus",
+      "SEQUENCER_MT_image",
+      "SEQUENCER_MT_image_apply",
+      "SEQUENCER_MT_image_clear",
+      "SEQUENCER_MT_image_transform",
+      "SEQUENCER_MT_marker",
+      "SEQUENCER_MT_modifier_add",
+      "SEQUENCER_MT_navigation",
+      "SEQUENCER_MT_pivot_pie",
+      "SEQUENCER_MT_preview_context_menu",
+      "SEQUENCER_MT_preview_view_pie",
+      "SEQUENCER_MT_preview_zoom",
+      "SEQUENCER_MT_proxy",
+      "SEQUENCER_MT_range",
+      "SEQUENCER_MT_retiming",
+      "SEQUENCER_MT_select",
+      "SEQUENCER_MT_select_channel",
+      "SEQUENCER_MT_select_handle",
+      "SEQUENCER_MT_strip",
+      "SEQUENCER_MT_strip_animation",
+      "SEQUENCER_MT_strip_effect",
+      "SEQUENCER_MT_strip_effect_change",
+      "SEQUENCER_MT_strip_input",
+      "SEQUENCER_MT_strip_lock_mute",
+      "SEQUENCER_MT_strip_mirror",
+      "SEQUENCER_MT_strip_modifiers",
+      "SEQUENCER_MT_strip_movie",
+      "SEQUENCER_MT_strip_retiming",
+      "SEQUENCER_MT_strip_show_hide",
+      "SEQUENCER_MT_strip_text",
+      "SEQUENCER_MT_strip_transform",
+      "SEQUENCER_MT_view",
+      "SEQUENCER_MT_view_pie",
+      "SEQUENCER_MT_view_render",
+      "SPREADSHEET_MT_editor_menus",
+      "SPREADSHEET_MT_view",
+      "SwapNodeMenu",
+      "TEXTURE_MT_context_menu",
+      "TEXT_MT_context_menu",
+      "TEXT_MT_edit",
+      "TEXT_MT_edit_to3d",
+      "TEXT_MT_editor_menus",
+      "TEXT_MT_format",
+      "TEXT_MT_select",
+      "TEXT_MT_templates",
+      "TEXT_MT_templates_osl",
+      "TEXT_MT_templates_py",
+      "TEXT_MT_text",
+      "TEXT_MT_view",
+      "TEXT_MT_view_navigation",
+      "TIME_MT_view",
+      "TOPBAR_MT_blender",
+      "TOPBAR_MT_blender_system",
+      "TOPBAR_MT_edit",
+      "TOPBAR_MT_edit_armature_add",
+      "TOPBAR_MT_edit_curve_add",
+      "TOPBAR_MT_editor_menus",
+      "TOPBAR_MT_file",
+      "TOPBAR_MT_file_cleanup",
+      "TOPBAR_MT_file_context_menu",
+      "TOPBAR_MT_file_defaults",
+      "TOPBAR_MT_file_export",
+      "TOPBAR_MT_file_external_data",
+      "TOPBAR_MT_file_import",
+      "TOPBAR_MT_file_new",
+      "TOPBAR_MT_file_previews",
+      "TOPBAR_MT_file_recover",
+      "TOPBAR_MT_help",
+      "TOPBAR_MT_render",
+      "TOPBAR_MT_templates_more",
+      "TOPBAR_MT_window",
+      "TOPBAR_MT_workspace_menu",
+      "UI_MT_button_context_menu",
+      "UI_MT_list_item_context_menu",
+      "USERPREF_MT_editor_menus",
+      "USERPREF_MT_extensions_active_repo",
+      "USERPREF_MT_extensions_active_repo_remove",
+      "USERPREF_MT_interface_theme_presets",
+      "USERPREF_MT_keyconfigs",
+      "USERPREF_MT_save_load",
+      "USERPREF_MT_view",
+      "VIEW3D_MT_add",
+      "VIEW3D_MT_add_object",
+      "VIEW3D_MT_armature_add",
+      "VIEW3D_MT_armature_context_menu",
+      "VIEW3D_MT_bone_collections",
+      "VIEW3D_MT_bone_options_disable",
+      "VIEW3D_MT_bone_options_enable",
+      "VIEW3D_MT_bone_options_toggle",
+      "VIEW3D_MT_brush_context_menu",
+      "VIEW3D_MT_camera_add",
+      "VIEW3D_MT_curve_add",
+      "VIEW3D_MT_edit_armature",
+      "VIEW3D_MT_edit_armature_delete",
+      "VIEW3D_MT_edit_armature_names",
+      "VIEW3D_MT_edit_armature_parent",
+      "VIEW3D_MT_edit_armature_roll",
+      "VIEW3D_MT_edit_curve",
+      "VIEW3D_MT_edit_curve_clean",
+      "VIEW3D_MT_edit_curve_context_menu",
+      "VIEW3D_MT_edit_curve_ctrlpoints",
+      "VIEW3D_MT_edit_curve_delete",
+      "VIEW3D_MT_edit_curve_segments",
+      "VIEW3D_MT_edit_curve_showhide",
+      "VIEW3D_MT_edit_curves",
+      "VIEW3D_MT_edit_curves_add",
+      "VIEW3D_MT_edit_curves_context_menu",
+      "VIEW3D_MT_edit_curves_control_points",
+      "VIEW3D_MT_edit_curves_segments",
+      "VIEW3D_MT_edit_curves_select_more_less",
+      "VIEW3D_MT_edit_font",
+      "VIEW3D_MT_edit_font_chars",
+      "VIEW3D_MT_edit_font_context_menu",
+      "VIEW3D_MT_edit_font_delete",
+      "VIEW3D_MT_edit_font_kerning",
+      "VIEW3D_MT_edit_greasepencil",
+      "VIEW3D_MT_edit_greasepencil_animation",
+      "VIEW3D_MT_edit_greasepencil_cleanup",
+      "VIEW3D_MT_edit_greasepencil_delete",
+      "VIEW3D_MT_edit_greasepencil_point",
+      "VIEW3D_MT_edit_greasepencil_showhide",
+      "VIEW3D_MT_edit_greasepencil_stroke",
+      "VIEW3D_MT_edit_lattice",
+      "VIEW3D_MT_edit_lattice_context_menu",
+      "VIEW3D_MT_edit_mesh",
+      "VIEW3D_MT_edit_mesh_clean",
+      "VIEW3D_MT_edit_mesh_context_menu",
+      "VIEW3D_MT_edit_mesh_delete",
+      "VIEW3D_MT_edit_mesh_edges",
+      "VIEW3D_MT_edit_mesh_extrude",
+      "VIEW3D_MT_edit_mesh_faces",
+      "VIEW3D_MT_edit_mesh_faces_data",
+      "VIEW3D_MT_edit_mesh_merge",
+      "VIEW3D_MT_edit_mesh_normals",
+      "VIEW3D_MT_edit_mesh_normals_average",
+      "VIEW3D_MT_edit_mesh_normals_select_strength",
+      "VIEW3D_MT_edit_mesh_normals_set_strength",
+      "VIEW3D_MT_edit_mesh_select_by_trait",
+      "VIEW3D_MT_edit_mesh_select_linked",
+      "VIEW3D_MT_edit_mesh_select_loops",
+      "VIEW3D_MT_edit_mesh_select_mode",
+      "VIEW3D_MT_edit_mesh_select_more_less",
+      "VIEW3D_MT_edit_mesh_select_similar",
+      "VIEW3D_MT_edit_mesh_shading",
+      "VIEW3D_MT_edit_mesh_showhide",
+      "VIEW3D_MT_edit_mesh_split",
+      "VIEW3D_MT_edit_mesh_vertices",
+      "VIEW3D_MT_edit_mesh_weights",
+      "VIEW3D_MT_edit_meta",
+      "VIEW3D_MT_edit_meta_showhide",
+      "VIEW3D_MT_edit_metaball_context_menu",
+      "VIEW3D_MT_edit_pointcloud",
+      "VIEW3D_MT_edit_surface",
+      "VIEW3D_MT_editor_menus",
+      "VIEW3D_MT_empty_add",
+      "VIEW3D_MT_face_sets",
+      "VIEW3D_MT_face_sets_init",
+      "VIEW3D_MT_grease_pencil_add",
+      "VIEW3D_MT_grease_pencil_assign_material",
+      "VIEW3D_MT_grease_pencil_sculpt_automasking_pie",
+      "VIEW3D_MT_greasepencil_edit_context_menu",
+      "VIEW3D_MT_greasepencil_material_active",
+      "VIEW3D_MT_greasepencil_vertex_group",
+      "VIEW3D_MT_hook",
+      "VIEW3D_MT_image_add",
+      "VIEW3D_MT_lattice_add",
+      "VIEW3D_MT_light_add",
+      "VIEW3D_MT_lightprobe_add",
+      "VIEW3D_MT_make_links",
+      "VIEW3D_MT_make_single_user",
+      "VIEW3D_MT_mask",
+      "VIEW3D_MT_mesh_add",
+      "VIEW3D_MT_metaball_add",
+      "VIEW3D_MT_mirror",
+      "VIEW3D_MT_object",
+      "VIEW3D_MT_object_animation",
+      "VIEW3D_MT_object_apply",
+      "VIEW3D_MT_object_asset",
+      "VIEW3D_MT_object_cleanup",
+      "VIEW3D_MT_object_clear",
+      "VIEW3D_MT_object_collection",
+      "VIEW3D_MT_object_constraints",
+      "VIEW3D_MT_object_context_menu",
+      "VIEW3D_MT_object_convert",
+      "VIEW3D_MT_object_liboverride",
+      "VIEW3D_MT_object_mode_pie",
+      "VIEW3D_MT_object_modifiers",
+      "VIEW3D_MT_object_parent",
+      "VIEW3D_MT_object_quick_effects",
+      "VIEW3D_MT_object_relations",
+      "VIEW3D_MT_object_rigid_body",
+      "VIEW3D_MT_object_shading",
+      "VIEW3D_MT_object_showhide",
+      "VIEW3D_MT_object_track",
+      "VIEW3D_MT_orientations_pie",
+      "VIEW3D_MT_paint_grease_pencil",
+      "VIEW3D_MT_paint_vertex",
+      "VIEW3D_MT_paint_vertex_grease_pencil",
+      "VIEW3D_MT_paint_weight",
+      "VIEW3D_MT_paint_weight_lock",
+      "VIEW3D_MT_particle",
+      "VIEW3D_MT_particle_context_menu",
+      "VIEW3D_MT_particle_showhide",
+      "VIEW3D_MT_pivot_pie",
+      "VIEW3D_MT_pose",
+      "VIEW3D_MT_pose_apply",
+      "VIEW3D_MT_pose_constraints",
+      "VIEW3D_MT_pose_context_menu",
+      "VIEW3D_MT_pose_ik",
+      "VIEW3D_MT_pose_motion",
+      "VIEW3D_MT_pose_names",
+      "VIEW3D_MT_pose_propagate",
+      "VIEW3D_MT_pose_showhide",
+      "VIEW3D_MT_pose_slide",
+      "VIEW3D_MT_pose_transform",
+      "VIEW3D_MT_proportional_editing_falloff_pie",
+      "VIEW3D_MT_random_mask",
+      "VIEW3D_MT_sculpt",
+      "VIEW3D_MT_sculpt_automasking_pie",
+      "VIEW3D_MT_sculpt_curves",
+      "VIEW3D_MT_sculpt_face_sets_edit_pie",
+      "VIEW3D_MT_sculpt_mask_edit_pie",
+      "VIEW3D_MT_sculpt_set_pivot",
+      "VIEW3D_MT_sculpt_showhide",
+      "VIEW3D_MT_sculpt_transform",
+      "VIEW3D_MT_sculpt_trim",
+      "VIEW3D_MT_select_edit_armature",
+      "VIEW3D_MT_select_edit_curve",
+      "VIEW3D_MT_select_edit_curves",
+      "VIEW3D_MT_select_edit_grease_pencil",
+      "VIEW3D_MT_select_edit_lattice",
+      "VIEW3D_MT_select_edit_mesh",
+      "VIEW3D_MT_select_edit_metaball",
+      "VIEW3D_MT_select_edit_pointcloud",
+      "VIEW3D_MT_select_edit_surface",
+      "VIEW3D_MT_select_edit_text",
+      "VIEW3D_MT_select_object",
+      "VIEW3D_MT_select_object_more_less",
+      "VIEW3D_MT_select_paint_mask",
+      "VIEW3D_MT_select_paint_mask_vertex",
+      "VIEW3D_MT_select_particle",
+      "VIEW3D_MT_select_pose",
+      "VIEW3D_MT_select_pose_more_less",
+      "VIEW3D_MT_select_sculpt_curves",
+      "VIEW3D_MT_shading_ex_pie",
+      "VIEW3D_MT_shading_pie",
+      "VIEW3D_MT_snap",
+      "VIEW3D_MT_snap_pie",
+      "VIEW3D_MT_surface_add",
+      "VIEW3D_MT_tools_projectpaint_clone",
+      "VIEW3D_MT_tools_projectpaint_stencil",
+      "VIEW3D_MT_tools_projectpaint_uvlayer",
+      "VIEW3D_MT_transform",
+      "VIEW3D_MT_transform_armature",
+      "VIEW3D_MT_transform_gizmo_pie",
+      "VIEW3D_MT_transform_object",
+      "VIEW3D_MT_uv_map",
+      "VIEW3D_MT_vertex_group",
+      "VIEW3D_MT_view",
+      "VIEW3D_MT_view_align",
+      "VIEW3D_MT_view_align_selected",
+      "VIEW3D_MT_view_cameras",
+      "VIEW3D_MT_view_local",
+      "VIEW3D_MT_view_navigation",
+      "VIEW3D_MT_view_pie",
+      "VIEW3D_MT_view_regions",
+      "VIEW3D_MT_view_viewpoint",
+      "VIEW3D_MT_volume_add",
+      "VIEW3D_MT_weight_grease_pencil",
+      "VIEW3D_MT_wpaint_vgroup_lock_pie",
+      "VIEWLAYER_MT_lightgroup_sync",
+      "WM_MT_toolsystem_submenu"
+    ],
+    "registeredMenuClasses": [],
+    "sourceMenuCoverage": "All statically declared Menu subclasses (including inheritance) in every direct *.py of selected bl_ui directory.",
+    "expanded": "Literal UI draw actions and resolvable local/imported Python draw helpers; both conditional branches retained. No operators or draw callbacks executed.",
+    "notExpanded": "Runtime-generated assets, context data, native templates/popovers, computed operator IDs, extension menus outside selected source root, callbacks appended dynamically, every possible runtime branch value.",
+    "nativeDecompilation": false,
+    "executedOperators": 0,
+    "errors": [
+      {
+        "phase": "class-name",
+        "id": "DataButtonsPanel",
+        "source": "C:\\Program Files\\Blender Foundation\\Blender 5.2\\5.2\\scripts\\startup\\bl_ui\\properties_data_empty.py",
+        "message": "Duplicate source class name; first definition retained"
+      },
+      {
+        "phase": "class-name",
+        "id": "DataButtonsPanel",
+        "source": "C:\\Program Files\\Blender Foundation\\Blender 5.2\\5.2\\scripts\\startup\\bl_ui\\properties_data_grease_pencil.py",
+        "message": "Duplicate source class name; first definition retained"
+      },
+      {
+        "phase": "class-name",
+        "id": "DataButtonsPanel",
+        "source": "C:\\Program Files\\Blender Foundation\\Blender 5.2\\5.2\\scripts\\startup\\bl_ui\\properties_data_lattice.py",
+        "message": "Duplicate source class name; first definition retained"
+      },
+      {
+        "phase": "class-name",
+        "id": "DataButtonsPanel",
+        "source": "C:\\Program Files\\Blender Foundation\\Blender 5.2\\5.2\\scripts\\startup\\bl_ui\\properties_data_light.py",
+        "message": "Duplicate source class name; first definition retained"
+      },
+      {
+        "phase": "class-name",
+        "id": "DataButtonsPanel",
+        "source": "C:\\Program Files\\Blender Foundation\\Blender 5.2\\5.2\\scripts\\startup\\bl_ui\\properties_data_lightprobe.py",
+        "message": "Duplicate source class name; first definition retained"
+      },
+      {
+        "phase": "class-name",
+        "id": "DataButtonsPanel",
+        "source": "C:\\Program Files\\Blender Foundation\\Blender 5.2\\5.2\\scripts\\startup\\bl_ui\\properties_data_metaball.py",
+        "message": "Duplicate source class name; first definition retained"
+      },
+      {
+        "phase": "class-name",
+        "id": "DataButtonsPanel",
+        "source": "C:\\Program Files\\Blender Foundation\\Blender 5.2\\5.2\\scripts\\startup\\bl_ui\\properties_data_pointcloud.py",
+        "message": "Duplicate source class name; first definition retained"
+      },
+      {
+        "phase": "class-name",
+        "id": "DataButtonsPanel",
+        "source": "C:\\Program Files\\Blender Foundation\\Blender 5.2\\5.2\\scripts\\startup\\bl_ui\\properties_data_speaker.py",
+        "message": "Duplicate source class name; first definition retained"
+      },
+      {
+        "phase": "class-name",
+        "id": "DataButtonsPanel",
+        "source": "C:\\Program Files\\Blender Foundation\\Blender 5.2\\5.2\\scripts\\startup\\bl_ui\\properties_data_volume.py",
+        "message": "Duplicate source class name; first definition retained"
+      },
+      {
+        "phase": "class-name",
+        "id": "PhysicButtonsPanel",
+        "source": "C:\\Program Files\\Blender Foundation\\Blender 5.2\\5.2\\scripts\\startup\\bl_ui\\properties_physics_common.py",
+        "message": "Duplicate source class name; first definition retained"
+      },
+      {
+        "phase": "class-name",
+        "id": "PhysicButtonsPanel",
+        "source": "C:\\Program Files\\Blender Foundation\\Blender 5.2\\5.2\\scripts\\startup\\bl_ui\\properties_physics_dynamicpaint.py",
+        "message": "Duplicate source class name; first definition retained"
+      },
+      {
+        "phase": "class-name",
+        "id": "PhysicButtonsPanel",
+        "source": "C:\\Program Files\\Blender Foundation\\Blender 5.2\\5.2\\scripts\\startup\\bl_ui\\properties_physics_field.py",
+        "message": "Duplicate source class name; first definition retained"
+      },
+      {
+        "phase": "class-name",
+        "id": "PhysicButtonsPanel",
+        "source": "C:\\Program Files\\Blender Foundation\\Blender 5.2\\5.2\\scripts\\startup\\bl_ui\\properties_physics_fluid.py",
+        "message": "Duplicate source class name; first definition retained"
+      },
+      {
+        "phase": "class-name",
+        "id": "PhysicButtonsPanel",
+        "source": "C:\\Program Files\\Blender Foundation\\Blender 5.2\\5.2\\scripts\\startup\\bl_ui\\properties_physics_softbody.py",
+        "message": "Duplicate source class name; first definition retained"
+      },
+      {
+        "phase": "class-name",
+        "id": "_draw_tool_settings_context_mode",
+        "source": "C:\\Program Files\\Blender Foundation\\Blender 5.2\\5.2\\scripts\\startup\\bl_ui\\space_view3d.py",
+        "message": "Duplicate source class name; first definition retained"
+      }
+    ]
+  }
+}
