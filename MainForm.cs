@@ -10,6 +10,8 @@ public sealed class MainForm : Form
     private readonly CodeEditor editor = new() { Dock = DockStyle.Fill };
     private readonly ModelViewport viewport = new() { Dock = DockStyle.Fill };
     private readonly ObjectActionPanel objectActions = new() { Dock = DockStyle.Fill };
+    private readonly ShapeTransformPanel shapeTools = new() { Dock = DockStyle.Fill };
+    private readonly TabControl modelToolTabs = new() { Dock = DockStyle.Fill };
     private readonly ContextMenuStrip objectMenu = new();
     private readonly ToolStripTextBox objectMenuSearch = new() { Width = 230 };
     private readonly ListBox objects = new() { Dock = DockStyle.Fill, BorderStyle = BorderStyle.None,
@@ -102,6 +104,19 @@ public sealed class MainForm : Form
         };
         objectActions.PreviewInvalidated += (_, _) => CancelLivePreview();
         objectActions.PreviewRequested += async (_, code) => await ShowLivePreviewAsync(code);
+        shapeTools.PreviewInvalidated += (_, _) => CancelLivePreview();
+        shapeTools.PreviewRequested += async (_, code) => await ShowLivePreviewAsync(code);
+        shapeTools.ApplyRequested += async (_, action) =>
+        {
+            if (Busy) return;
+            CancelLivePreview();
+            editor.AppendSnippet(action.Code);
+            if (!await BuildModelAsync() || action.CreatedName == null) return;
+            var index = -1;
+            for (int i = 0; i < objects.Items.Count; i++)
+                if (objects.Items[i]?.ToString()?.StartsWith(action.CreatedName, StringComparison.Ordinal) == true) index = i;
+            if (index >= 0) objects.SelectedIndex = index;
+        };
         objectActions.ActionSelected += (_, id) =>
         {
             viewport.ShowTopology = id == "bpy.ops.mesh.subdivide";
@@ -122,6 +137,7 @@ public sealed class MainForm : Form
             if (i < 0 || i >= viewport.Objects.Count) { viewport.SelectedObject = null; return; }
             var obj = viewport.Objects[i]; viewport.SelectedObject = obj.Name;
             objectActions.SetTargetObject(obj.Name);
+            shapeTools.SelectObject(obj);
             objectDetails.Text = $"{obj.VertexCount:N0} จุดยอด\n{obj.TriangleCount:N0} สามเหลี่ยม";
         };
         objects.DrawItem += (_, e) =>
@@ -166,6 +182,8 @@ public sealed class MainForm : Form
         file.DropDownItems.Add(new ToolStripSeparator());
         Add(file, "ออก", (_, _) => Close(), idleOnly: false);
         var model = new ToolStripMenuItem("โมเดล");
+        Add(model, "เพิ่มรูปทรง…", (_, _) => { modelToolTabs.SelectedIndex = 1; shapeTools.ShowCreateTab(); });
+        Add(model, "ย้าย หมุน สเกลวัตถุที่เลือก…", (_, _) => { modelToolTabs.SelectedIndex = 1; shapeTools.ShowTransformTab(); });
         Add(model, "คลังฟังก์ชัน Blender ภาษาไทย…", (_, _) => ShowApiCatalog(), Keys.Control | Keys.Space);
         Add(model, "เมนู Blender ทั้งหมด → โค้ดไทย…", (_, _) => ShowWorkbench(), Keys.Control | Keys.Shift | Keys.Space);
         Add(model, "สร้างจากโค้ด", async (_, _) => await BuildModelAsync(), Keys.F5);
@@ -192,7 +210,7 @@ public sealed class MainForm : Form
         var help = new ToolStripMenuItem("คู่มือ");
         Add(help, "คำสั่งและวิธีใช้", (_, _) => ShowHelp(), Keys.F1, false);
         Add(help, "เกี่ยวกับ มิติ สตูดิโอ", (_, _) => MessageBox.Show(this,
-            "มิติ สตูดิโอ 0.5.2\nแอป Windows Forms สำหรับสร้างโมเดลด้วย Python และปุ่มคำสั่ง\n\nคลิกขวาที่โมเดลเพื่อค้นหาคำสั่ง ปรับพารามิเตอร์ด้านขวา แล้วกดใช้กับวัตถุ\nค่าแบ่งย่อยแสดงเส้นร่างทันที จากนั้น Blender คำนวณเมชจริง\nCtrl+Space เปิดคลัง API Blender\n\nใช้ Blender จริงเป็นเอนจิน\nคำสั่งบางชนิดต้องเตรียมวัตถุ โหมด หรือหน้าต่างให้เหมาะสม",
+            "มิติ สตูดิโอ 0.6\nสร้างรูปทรง 8 แบบและปรับตำแหน่ง หมุน สเกลด้วยแผงด้านขวา\n\nคลิกขวาที่โมเดลเพื่อค้นหาคำสั่ง หรือใช้แท็บ รูปทรง/แปลง\nค่าที่ปรับจะแสดงภาพตัวอย่าง ก่อนกดใช้กับวัตถุเพื่อบันทึก\nCtrl+Space เปิดคลัง API Blender\n\nใช้ Blender จริงเป็นเอนจิน\nคำสั่งบางชนิดต้องเตรียมวัตถุ โหมด หรือหน้าต่างให้เหมาะสม",
             "เกี่ยวกับ", MessageBoxButtons.OK, MessageBoxIcon.Information), idleOnly: false);
         menu.Items.AddRange([file, model, view, settings, help]);
         return menu;
@@ -283,9 +301,13 @@ public sealed class MainForm : Form
         top.Controls.Add(views); top.Controls.Add(title);
         var info = new Panel { Dock = DockStyle.Bottom, Height = 32, BackColor = Theme.Panel, Padding = new Padding(12, 6, 0, 0) };
         modelLabel.Dock = DockStyle.Fill; info.Controls.Add(modelLabel);
-        var sculpt = objectActions;
+        modelToolTabs.TabPages.Clear();
+        var actionPage = new TabPage("คำสั่ง") { BackColor = Theme.Panel };
+        var toolsPage = new TabPage("รูปทรง/แปลง") { BackColor = Theme.Panel };
+        actionPage.Controls.Add(objectActions); toolsPage.Controls.Add(shapeTools);
+        modelToolTabs.TabPages.AddRange([actionPage, toolsPage]); modelToolTabs.SelectedIndex = 1;
         var body = new SplitContainer { Dock = DockStyle.Fill, Orientation = Orientation.Vertical, SplitterWidth = 3, BackColor = Theme.Border, FixedPanel = FixedPanel.Panel2 };
-        body.Panel1.Controls.Add(viewport); body.Panel2.Controls.Add(sculpt); body.SplitterDistance = 300;
+        body.Panel1.Controls.Add(viewport); body.Panel2.Controls.Add(modelToolTabs); body.SplitterDistance = 300;
         viewportSplit = body;
         p.Controls.Add(body); p.Controls.Add(info); p.Controls.Add(top); return p;
     }
@@ -293,8 +315,10 @@ public sealed class MainForm : Form
     private void OpenObjectActions(string name)
     {
         if (Busy || string.IsNullOrEmpty(name)) return;
+        modelToolTabs.SelectedIndex = 0;
         objectActions.PickObject(name);
         objectMenuSearch.Text = "";
+        RefreshObjectMenu();
         objectMenu.Show(Cursor.Position);
         objectMenuSearch.Focus();
     }
@@ -303,6 +327,13 @@ public sealed class MainForm : Form
     {
         objectActions.SetQuery(objectMenuSearch.Text);
         while (objectMenu.Items.Count > 1) objectMenu.Items.RemoveAt(1);
+        var transformItem = new ToolStripMenuItem("ย้าย / หมุน / สเกลวัตถุนี้");
+        transformItem.Click += (_, _) => { modelToolTabs.SelectedIndex = 1; shapeTools.ShowTransformTab(); };
+        objectMenu.Items.Add(transformItem);
+        var createItem = new ToolStripMenuItem("เพิ่มรูปทรงใหม่…");
+        createItem.Click += (_, _) => { modelToolTabs.SelectedIndex = 1; shapeTools.ShowCreateTab(); };
+        objectMenu.Items.Add(createItem);
+        objectMenu.Items.Add(new ToolStripSeparator());
         foreach (var entry in objectActions.Matches.Take(8))
         {
             var option = new ToolStripMenuItem(entry.DisplayName + "  ·  " + entry.Id);
@@ -472,6 +503,7 @@ public sealed class MainForm : Form
         var cts = new CancellationTokenSource(); previewOperation = cts;
         status.Text = "กำลังอัปเดตภาพตัวอย่างตามพารามิเตอร์…";
         objectActions.SetPreviewStatus("Blender กำลังคำนวณ…");
+        shapeTools.SetPreviewStatus("Blender กำลังคำนวณ…");
         export.Enabled = false;
         try
         {
@@ -483,6 +515,7 @@ public sealed class MainForm : Form
             UpdateSceneMetrics(true);
             status.Text = "ภาพตัวอย่างสด — กด ใช้กับวัตถุและสร้างใหม่ เพื่อบันทึกผล";
             objectActions.SetPreviewStatus("ภาพตัวอย่างใหม่ ✓ กดใช้เพื่อบันทึก");
+            shapeTools.SetPreviewStatus("ภาพตัวอย่างใหม่ ✓ กดใช้เพื่อบันทึก");
         }
         catch (OperationCanceledException) { }
         catch (Exception ex)
@@ -493,6 +526,7 @@ public sealed class MainForm : Form
                     ? "โค้ดเดิมมี mask.add_vertex (Mask Editor) — ลบบรรทัดนี้แล้วเลือกคำสั่งเมชใหม่"
                     : "แสดงภาพตัวอย่างไม่ได้: " + ex.Message.Split('\n')[0];
                 objectActions.SetPreviewStatus("ภาพตัวอย่างไม่สำเร็จ — ดูข้อความด้านล่าง");
+                shapeTools.SetPreviewStatus("ภาพตัวอย่างไม่สำเร็จ — ดูข้อความด้านล่าง");
             }
         }
         finally

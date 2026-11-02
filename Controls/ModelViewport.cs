@@ -6,7 +6,12 @@ using System.Text.Json;
 
 namespace ThaiModelStudio.Controls;
 
-public sealed record SceneObjectInfo(string Name, int VertexCount, int TriangleCount);
+public sealed record SceneObjectInfo(string Name, int VertexCount, int TriangleCount)
+{
+    public Vector3 Location { get; init; }
+    public Vector3 RotationDegrees { get; init; }
+    public Vector3 Scale { get; init; } = Vector3.One;
+}
 
 /// <summary>A dependency-free, orbitable viewport for Blender's evaluated mesh preview.</summary>
 public sealed class ModelViewport : Control
@@ -132,6 +137,7 @@ public sealed class ModelViewport : Control
             throw new InvalidDataException("ข้อมูลตัวอย่างโมเดลไม่ถูกต้อง: ไม่พบรายการวัตถุ");
 
         var meshes = new List<Mesh>();
+        var sceneObjects = new List<SceneObjectInfo>();
         foreach (var item in objects.EnumerateArray())
         {
             var name = item.TryGetProperty("name", out var nameValue) ? nameValue.GetString() ?? "วัตถุ" : "วัตถุ";
@@ -194,11 +200,15 @@ public sealed class ModelViewport : Control
                 Name = name, Vertices = vertices, Triangles = triangles.ToArray(), Edges = edges.ToArray(), Polygons = polygons.ToArray(), Color = color,
                 TriangleColors = triangleColors, Minimum = minimum, Maximum = maximum
             });
+            var location = item.TryGetProperty("location", out var locationData) ? ReadVector(locationData, Vector3.Zero) : Vector3.Zero;
+            var rotation = item.TryGetProperty("rotationEuler", out var rotationData) ? ReadVector(rotationData, Vector3.Zero) * (180f / MathF.PI) : Vector3.Zero;
+            var scale = item.TryGetProperty("scale", out var scaleData) ? ReadVector(scaleData, Vector3.One) : Vector3.One;
+            sceneObjects.Add(new SceneObjectInfo(name, vertices.Length, triangles.Count) { Location = location, RotationDegrees = rotation, Scale = scale });
         }
 
         // A malformed preview never replaces the last successful scene.
         _meshes = meshes;
-        _objects = meshes.Select(mesh => new SceneObjectInfo(mesh.Name, mesh.Vertices.Length, mesh.Triangles.Length)).ToList();
+        _objects = sceneObjects;
         _selectedObject = null;
         _isSimplified = document.RootElement.TryGetProperty("simplified", out var simplified) && simplified.ValueKind == JsonValueKind.True;
         SourceTriangleCount = document.RootElement.TryGetProperty("sourceTriangleCount", out var sourceCount)
@@ -610,6 +620,13 @@ public sealed class ModelViewport : Control
         }
         return Color.FromArgb(element.GetArrayLength() > 3 ? Math.Max(40, Channel(element[3], false)) : 255,
             Channel(element[0]), Channel(element[1]), Channel(element[2]));
+    }
+
+    private static Vector3 ReadVector(JsonElement element, Vector3 fallback)
+    {
+        if (element.ValueKind != JsonValueKind.Array || element.GetArrayLength() < 3) return fallback;
+        if (!element[0].TryGetSingle(out var x) || !element[1].TryGetSingle(out var y) || !element[2].TryGetSingle(out var z)) return fallback;
+        return float.IsFinite(x) && float.IsFinite(y) && float.IsFinite(z) ? new Vector3(x, y, z) : fallback;
     }
 
     private static Color Shade(Color color, float intensity, bool selected)

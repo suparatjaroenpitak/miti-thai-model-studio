@@ -80,6 +80,9 @@ def write_preview(path):
                 polygons = [list(face.vertices) for face in active_mesh.polygons]
                 colors = [get_color(obj, t.material_index) for t in active_mesh.loop_triangles]
                 objects.append({'name': obj.name, 'vertices': vertices, 'triangles': triangles, 'edges': edges, 'polygons': polygons,
+                                'location': [float(v) for v in obj.location],
+                                'rotationEuler': [float(v) for v in obj.rotation_euler],
+                                'scale': [float(v) for v in obj.scale],
                                 'color': get_color(obj), 'triangleColors': colors})
             finally:
                 if evaluated_temp is not None:
