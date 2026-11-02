@@ -63,5 +63,11 @@ internal static class Program
         if (!File.Exists(previewPath) || File.Exists(Path.Combine(Path.GetDirectoryName(previewPath)!, "scene.glb")))
             throw new Exception("Preview service did not create a lightweight preview");
         Console.WriteLine("PREVIEW_SERVICE_SUCCESS: Blender generated updated preview without export");
+        panel.SetTargetObject("OtherCube");
+        panel.SetQuery("bpy.ops.mesh.subdivide"); panel.Choose(panel.Matches.First(e => e.Id == "bpy.ops.mesh.subdivide"));
+        emitted = null; apply.PerformClick();
+        if (emitted == null || !emitted.Contains("bpy.data.objects.get(\"OtherCube\")"))
+            throw new Exception("Changing object selection did not update the action target");
+        Console.WriteLine("TARGET_SYNC_SUCCESS: action follows selected object");
     }
 }

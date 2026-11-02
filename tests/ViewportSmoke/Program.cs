@@ -12,7 +12,7 @@ internal static class Program
         Directory.CreateDirectory(artifacts);
         string preview = Path.Combine(artifacts, "viewport-smoke.json");
         File.WriteAllText(preview, """
-        {"objects":[{"name":"กล่องทดสอบ","vertices":[[-1,-1,0],[1,-1,0],[1,1,0],[-1,1,0],[-1,-1,2],[1,-1,2],[1,1,2],[-1,1,2]],"triangles":[[0,2,1],[0,3,2],[4,5,6],[4,6,7],[0,1,5],[0,5,4],[1,2,6],[1,6,5],[2,3,7],[2,7,6],[3,0,4],[3,4,7]],"color":[0.25,0.75,0.6,1]}]}
+        {"objects":[{"name":"กล่องทดสอบ","vertices":[[-1,-1,0],[1,-1,0],[1,1,0],[-1,1,0],[-1,-1,2],[1,-1,2],[1,1,2],[-1,1,2]],"triangles":[[0,2,1],[0,3,2],[4,5,6],[4,6,7],[0,1,5],[0,5,4],[1,2,6],[1,6,5],[2,3,7],[2,7,6],[3,0,4],[3,4,7]],"edges":[[0,1],[1,2],[2,3],[3,0],[4,5],[5,6],[6,7],[7,4],[0,4],[1,5],[2,6],[3,7]],"polygons":[[0,1,2,3],[4,5,6,7],[0,1,5,4],[1,2,6,5],[2,3,7,6],[3,0,4,7]],"color":[0.25,0.75,0.6,1]}]}
         """);
         using var viewport = new ModelViewport { Size = new Size(960, 640) };
         viewport.CreateControl();
@@ -23,6 +23,18 @@ internal static class Program
         viewport.LoadScene(preview, preserveView: true);
         if (viewport.SelectedObject != "กล่องทดสอบ") throw new Exception("Live preview lost the selected object.");
         viewport.SaveScreenshot(Path.Combine(artifacts, "viewport-smoke.png"));
+        viewport.ShowTopology = true;
+        viewport.SaveScreenshot(Path.Combine(artifacts, "viewport-topology-smoke.png"));
+        if (System.Security.Cryptography.SHA256.HashData(File.ReadAllBytes(Path.Combine(artifacts, "viewport-smoke.png"))).SequenceEqual(
+            System.Security.Cryptography.SHA256.HashData(File.ReadAllBytes(Path.Combine(artifacts, "viewport-topology-smoke.png")))))
+            throw new Exception("Mesh topology overlay did not change the rendered viewport.");
+        viewport.ShowTopology = false;
+        viewport.PreviewCuts = 3;
+        viewport.SaveScreenshot(Path.Combine(artifacts, "viewport-quick-subdivide.png"));
+        if (System.Security.Cryptography.SHA256.HashData(File.ReadAllBytes(Path.Combine(artifacts, "viewport-smoke.png"))).SequenceEqual(
+            System.Security.Cryptography.SHA256.HashData(File.ReadAllBytes(Path.Combine(artifacts, "viewport-quick-subdivide.png")))))
+            throw new Exception("Changing subdivision parameter did not update the viewport immediately.");
+        viewport.PreviewCuts = 0;
         foreach (string view in new[] { "top", "front", "right", "isometric" })
         {
             viewport.SetView(view);

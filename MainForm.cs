@@ -102,6 +102,12 @@ public sealed class MainForm : Form
         };
         objectActions.PreviewInvalidated += (_, _) => CancelLivePreview();
         objectActions.PreviewRequested += async (_, code) => await ShowLivePreviewAsync(code);
+        objectActions.ActionSelected += (_, id) =>
+        {
+            viewport.ShowTopology = id == "bpy.ops.mesh.subdivide";
+            if (id != "bpy.ops.mesh.subdivide") viewport.PreviewCuts = 0;
+        };
+        objectActions.QuickSubdivisionChanged += (_, cuts) => viewport.PreviewCuts = cuts;
         objects.MouseUp += (_, e) =>
         {
             if (e.Button != MouseButtons.Right) return;
@@ -115,6 +121,7 @@ public sealed class MainForm : Form
             var i = objects.SelectedIndex;
             if (i < 0 || i >= viewport.Objects.Count) { viewport.SelectedObject = null; return; }
             var obj = viewport.Objects[i]; viewport.SelectedObject = obj.Name;
+            objectActions.SetTargetObject(obj.Name);
             objectDetails.Text = $"{obj.VertexCount:N0} จุดยอด\n{obj.TriangleCount:N0} สามเหลี่ยม";
         };
         objects.DrawItem += (_, e) =>
@@ -185,7 +192,7 @@ public sealed class MainForm : Form
         var help = new ToolStripMenuItem("คู่มือ");
         Add(help, "คำสั่งและวิธีใช้", (_, _) => ShowHelp(), Keys.F1, false);
         Add(help, "เกี่ยวกับ มิติ สตูดิโอ", (_, _) => MessageBox.Show(this,
-            "มิติ สตูดิโอ 0.5\nแอป Windows Forms สำหรับสร้างโมเดลด้วย Python และปุ่มคำสั่ง\n\nคลิกขวาที่โมเดลเพื่อค้นหาคำสั่ง ปรับพารามิเตอร์ด้านขวา แล้วกดใช้กับวัตถุ\nค่าพารามิเตอร์จะแสดงภาพตัวอย่างใหม่อัตโนมัติเมื่อหยุดปรับชั่วครู่\nCtrl+Space เปิดคลัง API Blender\n\nใช้ Blender จริงเป็นเอนจิน\nคำสั่งบางชนิดต้องเตรียมวัตถุ โหมด หรือหน้าต่างให้เหมาะสม",
+            "มิติ สตูดิโอ 0.5.2\nแอป Windows Forms สำหรับสร้างโมเดลด้วย Python และปุ่มคำสั่ง\n\nคลิกขวาที่โมเดลเพื่อค้นหาคำสั่ง ปรับพารามิเตอร์ด้านขวา แล้วกดใช้กับวัตถุ\nค่าแบ่งย่อยแสดงเส้นร่างทันที จากนั้น Blender คำนวณเมชจริง\nCtrl+Space เปิดคลัง API Blender\n\nใช้ Blender จริงเป็นเอนจิน\nคำสั่งบางชนิดต้องเตรียมวัตถุ โหมด หรือหน้าต่างให้เหมาะสม",
             "เกี่ยวกับ", MessageBoxButtons.OK, MessageBoxIcon.Information), idleOnly: false);
         menu.Items.AddRange([file, model, view, settings, help]);
         return menu;
@@ -414,10 +421,13 @@ public sealed class MainForm : Form
             var jobDir = Path.Combine(dataDir, "Builds", DateTime.Now.ToString("yyyyMMdd-HHmmss") + "-" + Guid.NewGuid().ToString("N")[..6]);
             var result = await blender.BuildAsync(blenderPath!, source, jobDir, new Progress<string>(Log), cts.Token);
             cts.Token.ThrowIfCancellationRequested();
+            var selectedBefore = objectActions.TargetObject ?? viewport.SelectedObject;
             viewport.LoadScene(result.PreviewPath);
             lastBuild = result; lastBuiltSource = source;
             objects.Items.Clear(); foreach (var item in viewport.Objects) objects.Items.Add(item.Name);
-            objectDetails.Text = "เลือกวัตถุเพื่อดูรายละเอียด";
+            var selectedIndex = selectedBefore == null ? -1 : objects.Items.IndexOf(selectedBefore);
+            if (selectedIndex >= 0) objects.SelectedIndex = selectedIndex;
+            else objectDetails.Text = "เลือกวัตถุเพื่อดูรายละเอียด";
             modelLabel.Text = $"{viewport.Objects.Count:N0} วัตถุ  ·  {viewport.VertexCount:N0} จุดยอด  ·  {viewport.TriangleCount:N0} สามเหลี่ยม";
             using var json = JsonDocument.Parse(File.ReadAllText(result.PreviewPath));
             if (json.RootElement.TryGetProperty("simplified", out var simplified) && simplified.ValueKind == JsonValueKind.True)
@@ -447,7 +457,7 @@ public sealed class MainForm : Form
         previewOperation = null;
         if (livePreviewShowing && lastBuild != null && File.Exists(lastBuild.PreviewPath))
         {
-            try { viewport.LoadScene(lastBuild.PreviewPath, preserveView: true); }
+            try { viewport.LoadScene(lastBuild.PreviewPath, preserveView: true); UpdateSceneMetrics(false); }
             catch (Exception) { }
         }
         livePreviewShowing = false;
@@ -461,27 +471,42 @@ public sealed class MainForm : Form
         var current = ++previewVersion;
         var cts = new CancellationTokenSource(); previewOperation = cts;
         status.Text = "กำลังอัปเดตภาพตัวอย่างตามพารามิเตอร์…";
+        objectActions.SetPreviewStatus("Blender กำลังคำนวณ…");
         export.Enabled = false;
         try
         {
             var path = await blender.PreviewAsync(blenderPath, editor.Code + snippet, Path.Combine(dataDir, "Previews"), cts.Token);
             if (cts.IsCancellationRequested || current != previewVersion || IsDisposed || Busy) return;
             viewport.LoadScene(path, preserveView: true);
+            viewport.PreviewCuts = 0;
             livePreviewShowing = true;
+            UpdateSceneMetrics(true);
             status.Text = "ภาพตัวอย่างสด — กด ใช้กับวัตถุและสร้างใหม่ เพื่อบันทึกผล";
+            objectActions.SetPreviewStatus("ภาพตัวอย่างใหม่ ✓ กดใช้เพื่อบันทึก");
         }
         catch (OperationCanceledException) { }
         catch (Exception ex)
         {
-            if (current == previewVersion) status.Text = ex.Message.Contains("mask.add_vertex", StringComparison.OrdinalIgnoreCase)
-                ? "โค้ดเดิมมี mask.add_vertex (Mask Editor) — ลบบรรทัดนี้แล้วเลือกคำสั่งเมชใหม่"
-                : "แสดงภาพตัวอย่างไม่ได้: " + ex.Message.Split('\n')[0];
+            if (current == previewVersion)
+            {
+                status.Text = ex.Message.Contains("mask.add_vertex", StringComparison.OrdinalIgnoreCase)
+                    ? "โค้ดเดิมมี mask.add_vertex (Mask Editor) — ลบบรรทัดนี้แล้วเลือกคำสั่งเมชใหม่"
+                    : "แสดงภาพตัวอย่างไม่ได้: " + ex.Message.Split('\n')[0];
+                objectActions.SetPreviewStatus("ภาพตัวอย่างไม่สำเร็จ — ดูข้อความด้านล่าง");
+            }
         }
         finally
         {
             if (ReferenceEquals(previewOperation, cts)) { previewOperation = null; if (!livePreviewShowing && !Busy) export.Enabled = lastBuild != null; }
             cts.Dispose();
         }
+    }
+
+    private void UpdateSceneMetrics(bool temporary)
+    {
+        modelLabel.Text = $"{(temporary ? "ตัวอย่าง · " : "")}{viewport.Objects.Count:N0} วัตถุ  ·  {viewport.VertexCount:N0} จุดยอด  ·  {viewport.TriangleCount:N0} สามเหลี่ยม";
+        var selected = viewport.Objects.FirstOrDefault(o => o.Name == viewport.SelectedObject);
+        if (selected != null) objectDetails.Text = $"{selected.VertexCount:N0} จุดยอด\n{selected.TriangleCount:N0} สามเหลี่ยม";
     }
 
     private async Task ExportModelAsync()

@@ -76,8 +76,10 @@ def write_preview(path):
                 matrix = obj.matrix_world
                 vertices = [[round(float(v), 6) for v in matrix @ vert.co] for vert in active_mesh.vertices]
                 triangles = [list(t.vertices) for t in active_mesh.loop_triangles]
+                edges = [list(edge.vertices) for edge in active_mesh.edges]
+                polygons = [list(face.vertices) for face in active_mesh.polygons]
                 colors = [get_color(obj, t.material_index) for t in active_mesh.loop_triangles]
-                objects.append({'name': obj.name, 'vertices': vertices, 'triangles': triangles,
+                objects.append({'name': obj.name, 'vertices': vertices, 'triangles': triangles, 'edges': edges, 'polygons': polygons,
                                 'color': get_color(obj), 'triangleColors': colors})
             finally:
                 if evaluated_temp is not None:

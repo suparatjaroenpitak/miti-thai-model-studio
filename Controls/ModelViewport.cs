@@ -16,6 +16,8 @@ public sealed class ModelViewport : Control
         public required string Name { get; init; }
         public required Vector3[] Vertices { get; init; }
         public required int[][] Triangles { get; init; }
+        public int[][] Edges { get; init; } = [];
+        public int[][] Polygons { get; init; } = [];
         public required Color Color { get; init; }
         public Color[]? TriangleColors { get; init; }
         public Vector3 Minimum { get; init; }
@@ -34,6 +36,8 @@ public sealed class ModelViewport : Control
     private float _yaw = -0.85f;
     private float _pitch = 0.48f;
     private bool _wireframe;
+    private bool _showTopology;
+    private int _previewCuts;
     private bool _showGrid = true;
     private string? _selectedObject;
     private bool _mouseDown;
@@ -92,6 +96,18 @@ public sealed class ModelViewport : Control
         get => _wireframe;
         set { _wireframe = value; Invalidate(); }
     }
+    [DefaultValue(false)]
+    public bool ShowTopology
+    {
+        get => _showTopology;
+        set { _showTopology = value; Invalidate(); }
+    }
+    [DefaultValue(0)]
+    public int PreviewCuts
+    {
+        get => _previewCuts;
+        set { _previewCuts = Math.Clamp(value, 0, 100); Invalidate(); }
+    }
 
     [DefaultValue(true)]
     public bool ShowGrid
@@ -149,6 +165,22 @@ public sealed class ModelViewport : Control
                     throw new InvalidDataException($"หน้าสามเหลี่ยมของ {name} อ้างอิงจุดที่ไม่มีอยู่");
                 triangles.Add([a, b, c]);
             }
+            var edges = new List<int[]>();
+            if (item.TryGetProperty("edges", out var edgeData) && edgeData.ValueKind == JsonValueKind.Array)
+                foreach (var edge in edgeData.EnumerateArray())
+                {
+                    if (edge.ValueKind != JsonValueKind.Array || edge.GetArrayLength() != 2) continue;
+                    int a = edge[0].GetInt32(), b = edge[1].GetInt32();
+                    if (a >= 0 && b >= 0 && a < vertices.Length && b < vertices.Length) edges.Add([a, b]);
+                }
+            var polygons = new List<int[]>();
+            if (item.TryGetProperty("polygons", out var polygonData) && polygonData.ValueKind == JsonValueKind.Array)
+                foreach (var face in polygonData.EnumerateArray())
+                {
+                    if (face.ValueKind != JsonValueKind.Array || face.GetArrayLength() is < 3 or > 64) continue;
+                    var indices = face.EnumerateArray().Select(v => v.GetInt32()).ToArray();
+                    if (indices.All(v => v >= 0 && v < vertices.Length)) polygons.Add(indices);
+                }
 
             var color = item.TryGetProperty("color", out var colorData)
                 ? ReadColor(colorData, Color.FromArgb(255, 106, 176, 214))
@@ -159,7 +191,7 @@ public sealed class ModelViewport : Control
             if (vertices.Length == 0) minimum = maximum = Vector3.Zero;
             meshes.Add(new Mesh
             {
-                Name = name, Vertices = vertices, Triangles = triangles.ToArray(), Color = color,
+                Name = name, Vertices = vertices, Triangles = triangles.ToArray(), Edges = edges.ToArray(), Polygons = polygons.ToArray(), Color = color,
                 TriangleColors = triangleColors, Minimum = minimum, Maximum = maximum
             });
         }
@@ -262,9 +294,47 @@ public sealed class ModelViewport : Control
             }
         }
         graphics.SmoothingMode = _mouseDown ? SmoothingMode.None : SmoothingMode.AntiAlias;
+        if (_previewCuts > 0) DrawQuickSubdivision(graphics);
+        if (_showTopology) DrawTopology(graphics);
         DrawSelection(graphics);
         DrawAxes(graphics);
         DrawOverlay(graphics);
+    }
+
+    private void DrawQuickSubdivision(Graphics graphics)
+    {
+        if (string.IsNullOrEmpty(_selectedObject)) return;
+        using var pen = new Pen(Color.FromArgb(135, 72, 224, 245), 0.9f);
+        static PointF Along(PointF a, PointF b, float t) => new(a.X + (b.X - a.X) * t, a.Y + (b.Y - a.Y) * t);
+        int cuts = Math.Min(_previewCuts, 20);
+        foreach (var mesh in _meshes.Where(m => m.Name == _selectedObject))
+            foreach (var face in mesh.Polygons.Take(3000))
+            {
+                if (face.Length != 4) continue;
+                var p = face.Select(index => Project(mesh.Vertices[index])).ToArray();
+                if (p.Any(v => !v.Visible)) continue;
+                for (int i = 1; i <= cuts; i++)
+                {
+                    float t = i / (float)(cuts + 1);
+                    graphics.DrawLine(pen, Along(p[0].Point, p[1].Point, t), Along(p[3].Point, p[2].Point, t));
+                    graphics.DrawLine(pen, Along(p[0].Point, p[3].Point, t), Along(p[1].Point, p[2].Point, t));
+                }
+            }
+    }
+
+    private void DrawTopology(Graphics graphics)
+    {
+        if (string.IsNullOrEmpty(_selectedObject)) return;
+        using var pen = new Pen(Color.FromArgb(230, 90, 240, 196), 1.15f);
+        foreach (var mesh in _meshes.Where(m => m.Name == _selectedObject))
+        {
+            int stride = Math.Max(1, (int)Math.Ceiling(mesh.Edges.Length / 25000d));
+            for (int i = 0; i < mesh.Edges.Length; i += stride)
+            {
+                var edge = mesh.Edges[i];
+                DrawWorldLine(graphics, pen, mesh.Vertices[edge[0]], mesh.Vertices[edge[1]]);
+            }
+        }
     }
 
     private void SetupCamera()

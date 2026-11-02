@@ -12,6 +12,7 @@ public sealed class ObjectActionPanel : UserControl
     private readonly FlowLayoutPanel fields = new() { Dock = DockStyle.Fill, FlowDirection = FlowDirection.TopDown, WrapContents = false, AutoScroll = true };
     private readonly Label target = Theme.Label("คลิกขวาที่โมเดลเพื่อเลือกวัตถุ", 9, Theme.Accent);
     private readonly Label details = Theme.Label("เลือกคำสั่งจากผลค้นหา", 8.5f, Theme.Muted);
+    private readonly Label previewStatus = Theme.Label("ปรับค่าเพื่อดูผลในมุมมอง", 8.5f, Theme.Accent);
     private readonly Button apply;
     private readonly Button reset;
     private readonly ToolTip tips = new() { AutoPopDelay = 15000, InitialDelay = 300 };
@@ -24,6 +25,10 @@ public sealed class ObjectActionPanel : UserControl
     public event EventHandler<string>? ApplyRequested;
     public event EventHandler<string>? PreviewRequested;
     public event EventHandler? PreviewInvalidated;
+    public event EventHandler<string?>? ActionSelected;
+    public event EventHandler<int>? QuickSubdivisionChanged;
+    public string? TargetObject => objectName;
+    public void SetPreviewStatus(string message) => previewStatus.Text = message;
 
     public ObjectActionPanel()
     {
@@ -34,7 +39,8 @@ public sealed class ObjectActionPanel : UserControl
         apply.Dock = DockStyle.Bottom; apply.Height = 36; apply.Enabled = false;
         reset = Theme.Button("คืนค่าพารามิเตอร์เริ่มต้น", (_, _) => SelectAction());
         reset.Dock = DockStyle.Bottom; reset.Height = 30;
-        Controls.Add(fields); Controls.Add(reset); Controls.Add(apply); Controls.Add(details); Controls.Add(results); Controls.Add(search); Controls.Add(target);
+        previewStatus.Dock = DockStyle.Bottom; previewStatus.Height = 34; previewStatus.AutoSize = false;
+        Controls.Add(fields); Controls.Add(previewStatus); Controls.Add(reset); Controls.Add(apply); Controls.Add(details); Controls.Add(results); Controls.Add(search); Controls.Add(target);
         search.TextChanged += (_, _) => Filter(); results.SelectedIndexChanged += (_, _) => SelectAction();
         previewTimer.Tick += (_, _) =>
         {
@@ -47,8 +53,15 @@ public sealed class ObjectActionPanel : UserControl
 
     public void PickObject(string name)
     {
-        objectName = name; target.Text = "วัตถุ: " + name;
+        SetTargetObject(name);
         search.Focus(); search.SelectAll(); apply.Enabled = selected != null;
+    }
+    public void SetTargetObject(string name)
+    {
+        if (objectName == name) return;
+        objectName = name; target.Text = "วัตถุ: " + name;
+        apply.Enabled = selected != null;
+        SchedulePreview();
     }
     public IReadOnlyList<ApiEntry> Matches => matches;
     public void SetQuery(string query) => search.Text = query;
@@ -89,13 +102,14 @@ public sealed class ObjectActionPanel : UserControl
         }
         results.EndUpdate();
         if (results.Items.Count > 0) results.SelectedIndex = 0;
-        else { selected = null; fields.Controls.Clear(); apply.Enabled = false; details.Text = q.Length == 0 ? "พิมพ์ชื่อคำสั่งเพื่อค้นหา" : "ไม่พบคำสั่ง"; }
+        else { selected = null; ActionSelected?.Invoke(this, null); fields.Controls.Clear(); apply.Enabled = false; details.Text = q.Length == 0 ? "พิมพ์ชื่อคำสั่งเพื่อค้นหา" : "ไม่พบคำสั่ง"; }
     }
 
     private void SelectAction()
     {
         previewTimer.Stop(); PreviewInvalidated?.Invoke(this, EventArgs.Empty);
         selected = (results.SelectedItem as Row)?.Entry;
+        ActionSelected?.Invoke(this, selected?.Id);
         controls.Clear(); fields.Controls.Clear();
         if (selected == null) { apply.Enabled = false; return; }
         details.Text = selected.DisplayName + "\n" + selected.Id;
@@ -125,13 +139,24 @@ public sealed class ObjectActionPanel : UserControl
             var help = p.ThaiDescription ?? p.Description;
             if (!string.IsNullOrWhiteSpace(help)) { tips.SetToolTip(label, help); tips.SetToolTip(input, help); }
             input.Margin = new Padding(0, 0, 0, 7); fields.Controls.Add(input); controls.Add((p, input));
-            if (input is NumericUpDown numericInput) numericInput.ValueChanged += (_, _) => SchedulePreview();
+            if (input is NumericUpDown numericInput) numericInput.ValueChanged += (_, _) =>
+            {
+                if (selected?.Id == "bpy.ops.mesh.subdivide" && p.Id == "number_cuts")
+                    QuickSubdivisionChanged?.Invoke(this, (int)numericInput.Value);
+                SchedulePreview();
+            };
             else if (input is CheckBox checkbox) checkbox.CheckedChanged += (_, _) => SchedulePreview();
             else if (input is ComboBox combo) combo.SelectedIndexChanged += (_, _) => SchedulePreview();
             else if (input is TextBox text) text.TextChanged += (_, _) => SchedulePreview();
             else if (input is VectorEditor vector) vector.Changed += (_, _) => SchedulePreview();
         }
         apply.Enabled = objectName != null;
+        if (selected.Id == "bpy.ops.mesh.subdivide")
+        {
+            var cuts = controls.FirstOrDefault(c => c.parameter.Id == "number_cuts").control as NumericUpDown;
+            if (cuts != null) QuickSubdivisionChanged?.Invoke(this, (int)cuts.Value);
+        }
+        SchedulePreview();
     }
 
     private void Apply()
@@ -148,7 +173,11 @@ public sealed class ObjectActionPanel : UserControl
     private void SchedulePreview()
     {
         previewTimer.Stop(); PreviewInvalidated?.Invoke(this, EventArgs.Empty);
-        if (selected != null && objectName != null) previewTimer.Start();
+        if (selected != null && objectName != null)
+        {
+            previewStatus.Text = selected.Id == "bpy.ops.mesh.subdivide" ? "เส้นร่างทันที · รอ Blender คำนวณจริง…" : "รอ Blender อัปเดตโมเดล…";
+            previewTimer.Start();
+        }
     }
 
     public static bool IsModelingOperator(string id)
