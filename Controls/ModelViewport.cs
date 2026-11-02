@@ -59,7 +59,7 @@ public sealed class ModelViewport : Control
         TabStop = true;
         MinimumSize = new Size(180, 180);
         AccessibleName = "มุมมองโมเดลสามมิติ";
-        AccessibleDescription = "ลากซ้ายเพื่อหมุน ลากขวาเพื่อเลื่อน หมุนลูกล้อเพื่อซูม กด F เพื่อพอดีจอ";
+        AccessibleDescription = "คลิกขวาที่โมเดลเพื่อค้นหาคำสั่ง ลากซ้ายเพื่อหมุน ลากขวาเพื่อเลื่อน หมุนลูกล้อเพื่อซูม กด F เพื่อพอดีจอ";
     }
 
     public IReadOnlyList<SceneObjectInfo> Objects => _objects.AsReadOnly();
@@ -70,7 +70,7 @@ public sealed class ModelViewport : Control
     public bool HasScene => _meshes.Count > 0;
     public void ClearScene()
     {
-        _meshes.Clear(); _objects.Clear(); SelectedObject = null; SourceTriangleCount = 0;
+        _meshes.Clear(); _objects.Clear(); SelectedObject = null; SourceTriangleCount = 0; _isSimplified = false;
         Invalidate(); SceneLoaded?.Invoke(this, EventArgs.Empty);
     }
 
@@ -102,6 +102,7 @@ public sealed class ModelViewport : Control
 
     public event EventHandler? SceneLoaded;
     public event EventHandler<string>? ObjectSelected;
+    public event EventHandler<string>? ObjectContextRequested;
 
     public void LoadScene(string previewPath)
     {
@@ -413,7 +414,7 @@ public sealed class ModelViewport : Control
         }
         if (ClientSize.Width >= 380)
         {
-            string hint = "ลากซ้าย: หมุน   ·   ลากขวา: เลื่อน   ·   ลูกล้อ: ซูม   ·   F: พอดีจอ";
+            string hint = "คลิกขวา: ค้นหาคำสั่ง   ·   ลากซ้าย: หมุน   ·   ลากขวา: เลื่อน   ·   ลูกล้อ: ซูม";
             graphics.DrawString(hint, Font, muted, 16, ClientSize.Height - 29);
         }
     }
@@ -456,7 +457,8 @@ public sealed class ModelViewport : Control
     protected override void OnMouseUp(MouseEventArgs e)
     {
         base.OnMouseUp(e);
-        bool pick = _mouseDown && !_dragged && _dragButton == MouseButtons.Left;
+        bool pick = _mouseDown && !_dragged && _dragButton is MouseButtons.Left or MouseButtons.Right;
+        bool context = pick && _dragButton == MouseButtons.Right;
         _mouseDown = false;
         Capture = false;
         Cursor = Cursors.Default;
@@ -471,6 +473,7 @@ public sealed class ModelViewport : Control
                 if (!ContainsPoint(triangle, e.Location)) continue;
                 SelectedObject = _meshes[triangle.ObjectIndex].Name;
                 ObjectSelected?.Invoke(this, SelectedObject);
+                if (context) ObjectContextRequested?.Invoke(this, SelectedObject);
                 break;
             }
         }

@@ -9,7 +9,7 @@
     <AssemblyName>MitiStudio</AssemblyName>
     <RootNamespace>ThaiModelStudio</RootNamespace>
     <ApplicationHighDpiMode>PerMonitorV2</ApplicationHighDpiMode>
-    <Version>0.2.0</Version>
+    <Version>0.4.1</Version>
     <Product>มิติ สตูดิโอ</Product>
     <Description>สร้างโมเดลด้วยโค้ด พร้อม Blender และเมนูภาษาไทย</Description>
   </PropertyGroup>

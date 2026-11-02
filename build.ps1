@@ -16,7 +16,7 @@ $env:MSBuildEnableWorkloadResolver = 'false'
 $arguments = @('build', (Join-Path $projectRoot 'ThaiModelStudio.csproj'), '-c', 'Release', '-p:UseSharedCompilation=false', '-p:OutputPath=bin\ReleasePackage\', '--disable-build-servers')
 if ($Publish) {
     $arguments[0] = 'publish'
-    $arguments += @('--self-contained', 'false', '-o', (Join-Path $projectRoot 'dist\MitiStudio-0.3'))
+    $arguments += @('--self-contained', 'false', '-o', (Join-Path $projectRoot 'dist\MitiStudio-0.4.1'))
 }
 & $compilerPath @arguments @extraArguments
 exit $LASTEXITCODE

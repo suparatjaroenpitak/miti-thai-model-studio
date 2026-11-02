@@ -9,6 +9,9 @@ public sealed class MainForm : Form
 {
     private readonly CodeEditor editor = new() { Dock = DockStyle.Fill };
     private readonly ModelViewport viewport = new() { Dock = DockStyle.Fill };
+    private readonly ObjectActionPanel objectActions = new() { Dock = DockStyle.Fill };
+    private readonly ContextMenuStrip objectMenu = new();
+    private readonly ToolStripTextBox objectMenuSearch = new() { Width = 230 };
     private readonly ListBox objects = new() { Dock = DockStyle.Fill, BorderStyle = BorderStyle.None,
         BackColor = Theme.Panel, ForeColor = Theme.Text, IntegralHeight = false, ItemHeight = 30,
         DrawMode = DrawMode.OwnerDrawFixed };
@@ -36,6 +39,7 @@ public sealed class MainForm : Form
     private bool closing;
     private readonly SplitContainer workspaceSplit;
     private readonly SplitContainer editorSplit;
+    private SplitContainer? viewportSplit;
     private readonly SplitContainer outputSplit;
     private bool Busy => operation != null;
 
@@ -47,6 +51,11 @@ public sealed class MainForm : Form
         MinimumSize = new Size(1120, 760); KeyPreview = true;
         AutoScaleMode = AutoScaleMode.Dpi;
         ToolStripManager.Renderer = new DarkRenderer();
+        objectMenu.BackColor = Theme.Panel; objectMenu.ForeColor = Theme.Text;
+        objectMenu.Font = new Font("Leelawadee UI", 9);
+        objectMenu.Items.Add(objectMenuSearch);
+        objectMenuSearch.TextChanged += (_, _) => RefreshObjectMenu();
+        FormClosed += (_, _) => objectMenu.Dispose();
         run = Theme.Button("▶  สร้างโมเดล  F5", async (_, _) => await BuildModelAsync(), true);
         stop = Theme.Button("■  หยุด", (_, _) => operation?.Cancel()); stop.Enabled = false;
         export = Theme.Button("ส่งออกโมเดล ↗", async (_, _) => await ExportModelAsync());
@@ -80,6 +89,21 @@ public sealed class MainForm : Form
             status.Text = "โค้ดเปลี่ยนแล้ว — กด F5 เพื่อสร้างโมเดลใหม่";
         };
         viewport.ObjectSelected += (_, name) => objects.SelectedIndex = objects.Items.IndexOf(name);
+        viewport.ObjectContextRequested += (_, name) => OpenObjectActions(name);
+        objectActions.ApplyRequested += async (_, code) =>
+        {
+            if (Busy) return;
+            editor.AppendSnippet(code);
+            await BuildModelAsync();
+        };
+        objects.MouseUp += (_, e) =>
+        {
+            if (e.Button != MouseButtons.Right) return;
+            var index = objects.IndexFromPoint(e.Location);
+            if (index < 0 || index >= objects.Items.Count) return;
+            objects.SelectedIndex = index;
+            OpenObjectActions(objects.Items[index]?.ToString() ?? "");
+        };
         objects.SelectedIndexChanged += (_, _) =>
         {
             var i = objects.SelectedIndex;
@@ -104,6 +128,8 @@ public sealed class MainForm : Form
             workspaceSplit.SplitterDistance = 205;
             outputSplit.SplitterDistance = Math.Max(250, outputSplit.Height - 165);
             editorSplit.SplitterDistance = editorSplit.Width / 2;
+            if (viewportSplit != null && viewportSplit.Width > 420)
+                viewportSplit.SplitterDistance = viewportSplit.Width - 225;
             LoadSettings();
             var example = Path.Combine(AppContext.BaseDirectory, "examples", "01_house.py");
             SetCode(File.Exists(example) ? File.ReadAllText(example, Encoding.UTF8) : DefaultCode);
@@ -153,7 +179,7 @@ public sealed class MainForm : Form
         var help = new ToolStripMenuItem("คู่มือ");
         Add(help, "คำสั่งและวิธีใช้", (_, _) => ShowHelp(), Keys.F1, false);
         Add(help, "เกี่ยวกับ มิติ สตูดิโอ", (_, _) => MessageBox.Show(this,
-            "มิติ สตูดิโอ 0.2\nแอป Windows Forms สำหรับสร้างโมเดลด้วย Python\n\nคลัง API ของ Blender พร้อมชื่อและพารามิเตอร์ภาษาไทย\nCtrl+Space ค้นหาและแทรกโค้ด\n\nใช้ Blender จริงเป็นเอนจิน\nมุมมองใน WinForms แสดงเมชและสีพื้น\nฟังก์ชันบางชนิดต้องเตรียมวัตถุ โหมด หรือหน้าต่างให้เหมาะสม",
+            "มิติ สตูดิโอ 0.4.1\nแอป Windows Forms สำหรับสร้างโมเดลด้วย Python และปุ่มคำสั่ง\n\nคลิกขวาที่โมเดลเพื่อค้นหาคำสั่ง ปรับพารามิเตอร์ด้านขวา แล้วกดใช้กับวัตถุ\nCtrl+Space เปิดคลัง API Blender\n\nใช้ Blender จริงเป็นเอนจิน\nคำสั่งบางชนิดต้องเตรียมวัตถุ โหมด หรือหน้าต่างให้เหมาะสม",
             "เกี่ยวกับ", MessageBoxButtons.OK, MessageBoxIcon.Information), idleOnly: false);
         menu.Items.AddRange([file, model, view, settings, help]);
         return menu;
@@ -244,10 +270,32 @@ public sealed class MainForm : Form
         top.Controls.Add(views); top.Controls.Add(title);
         var info = new Panel { Dock = DockStyle.Bottom, Height = 32, BackColor = Theme.Panel, Padding = new Padding(12, 6, 0, 0) };
         modelLabel.Dock = DockStyle.Fill; info.Controls.Add(modelLabel);
-        var sculpt = BuildSculptPanel();
+        var sculpt = objectActions;
         var body = new SplitContainer { Dock = DockStyle.Fill, Orientation = Orientation.Vertical, SplitterWidth = 3, BackColor = Theme.Border, FixedPanel = FixedPanel.Panel2 };
-        body.Panel1.Controls.Add(viewport); body.Panel2.Controls.Add(sculpt); body.SplitterDistance = 520;
+        body.Panel1.Controls.Add(viewport); body.Panel2.Controls.Add(sculpt); body.SplitterDistance = 300;
+        viewportSplit = body;
         p.Controls.Add(body); p.Controls.Add(info); p.Controls.Add(top); return p;
+    }
+
+    private void OpenObjectActions(string name)
+    {
+        if (Busy || string.IsNullOrEmpty(name)) return;
+        objectActions.PickObject(name);
+        objectMenuSearch.Text = "";
+        objectMenu.Show(Cursor.Position);
+        objectMenuSearch.Focus();
+    }
+
+    private void RefreshObjectMenu()
+    {
+        objectActions.SetQuery(objectMenuSearch.Text);
+        while (objectMenu.Items.Count > 1) objectMenu.Items.RemoveAt(1);
+        foreach (var entry in objectActions.Matches.Take(8))
+        {
+            var option = new ToolStripMenuItem(entry.DisplayName + "  ·  " + entry.Id);
+            option.Click += (_, _) => objectActions.Choose(entry);
+            objectMenu.Items.Add(option);
+        }
     }
 
     private Control BuildSculptPanel()
