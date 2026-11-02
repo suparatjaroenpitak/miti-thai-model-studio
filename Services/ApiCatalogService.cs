@@ -52,6 +52,10 @@ public sealed class ApiParameter
     public string? ThaiName { get; set; }
     public string? ThaiIdentifier { get; set; }
     public string Type { get; set; } = "";
+    public int ArrayLength { get; set; }
+    public string? Subtype { get; set; }
+    public JsonElement Minimum { get; set; }
+    public JsonElement Maximum { get; set; }
     public string Description { get; set; } = "";
     public string? ThaiDescription { get; set; }
     public bool Required { get; set; }

@@ -13,6 +13,8 @@ public sealed class ObjectActionPanel : UserControl
     private readonly Label target = Theme.Label("คลิกขวาที่โมเดลเพื่อเลือกวัตถุ", 9, Theme.Accent);
     private readonly Label details = Theme.Label("เลือกคำสั่งจากผลค้นหา", 8.5f, Theme.Muted);
     private readonly Button apply;
+    private readonly Button reset;
+    private readonly ToolTip tips = new() { AutoPopDelay = 15000, InitialDelay = 300 };
     private readonly List<(ApiParameter parameter, Control control)> controls = [];
     private List<ApiEntry> inventory = [];
     private List<ApiEntry> matches = [];
@@ -27,7 +29,9 @@ public sealed class ObjectActionPanel : UserControl
         details.Dock = DockStyle.Top; details.Height = 48; details.AutoSize = false;
         apply = Theme.Button("ใช้กับวัตถุและสร้างใหม่", (_, _) => Apply(), true);
         apply.Dock = DockStyle.Bottom; apply.Height = 36; apply.Enabled = false;
-        Controls.Add(fields); Controls.Add(apply); Controls.Add(details); Controls.Add(results); Controls.Add(search); Controls.Add(target);
+        reset = Theme.Button("คืนค่าพารามิเตอร์เริ่มต้น", (_, _) => SelectAction());
+        reset.Dock = DockStyle.Bottom; reset.Height = 30;
+        Controls.Add(fields); Controls.Add(reset); Controls.Add(apply); Controls.Add(details); Controls.Add(results); Controls.Add(search); Controls.Add(target);
         search.TextChanged += (_, _) => Filter(); results.SelectedIndexChanged += (_, _) => SelectAction();
         Load += async (_, _) => await LoadInventoryAsync();
     }
@@ -44,7 +48,7 @@ public sealed class ObjectActionPanel : UserControl
         search.Text = entry.Id;
         for (var i = 0; i < results.Items.Count; i++)
             if ((results.Items[i] as Row)?.Entry.Id == entry.Id) { results.SelectedIndex = i; break; }
-        fields.Controls.OfType<TextBox>().FirstOrDefault()?.Focus();
+        controls.FirstOrDefault().control?.Focus();
     }
 
     private async Task LoadInventoryAsync()
@@ -86,10 +90,10 @@ public sealed class ObjectActionPanel : UserControl
         details.Text = selected.DisplayName + "\n" + selected.Id;
         foreach (var p in selected.Parameters.Where(p => p.Id != "rna_type" && !p.ReadOnly))
         {
-            var label = Theme.Label(p.DisplayName + (p.Required ? " *" : ""), 8.5f, Theme.Text);
-            label.AutoSize = false; label.Width = 190; label.Height = 22; fields.Controls.Add(label);
+            var label = Theme.Label(FriendlyName(p) + (p.Required ? " *" : ""), 8.5f, Theme.Text);
+            label.AutoSize = false; label.AutoEllipsis = true; label.Width = 190; label.Height = 22; fields.Controls.Add(label);
             Control input;
-            if (p.Type == "BOOLEAN") input = new CheckBox { Checked = p.Default.ValueKind == System.Text.Json.JsonValueKind.True, ForeColor = Theme.Text, Width = 190, Height = 26 };
+            if (p.Type == "BOOLEAN") input = new CheckBox { Text = "เปิดใช้งาน", Checked = p.Default.ValueKind == System.Text.Json.JsonValueKind.True, ForeColor = Theme.Text, Width = 190, Height = 26 };
             else if (p.Type == "ENUM" && p.EnumItems.Count > 0)
             {
                 var combo = new ComboBox { DropDownStyle = ComboBoxStyle.DropDownList, Width = 190, BackColor = Theme.Raised, ForeColor = Theme.Text };
@@ -97,7 +101,18 @@ public sealed class ObjectActionPanel : UserControl
                 var initial = p.Default.ValueKind == System.Text.Json.JsonValueKind.String ? p.Default.GetString() : null;
                 combo.SelectedIndex = Math.Max(0, combo.Items.Cast<Choice>().ToList().FindIndex(c => c.Id == initial)); input = combo;
             }
-            else input = new TextBox { Text = ApiCatalogService.PythonValue(p.Default, p.Type), Width = 190, BackColor = Theme.Raised, ForeColor = Theme.Text };
+            else if (p.Type is "INT" or "FLOAT" && p.ArrayLength is >= 2 and <= 4 && p.Default.ValueKind == System.Text.Json.JsonValueKind.Array)
+                input = new VectorEditor(p);
+            else if (p.Type is "INT" or "FLOAT" && p.ArrayLength == 0)
+            {
+                var number = CreateNumber(p);
+                var initial = p.Default.ValueKind == System.Text.Json.JsonValueKind.Number && p.Default.TryGetDecimal(out var val) ? val : 0;
+                number.Value = Math.Clamp(initial, number.Minimum, number.Maximum);
+                input = number;
+            }
+            else input = new TextBox { Text = p.Type == "STRING" && p.Default.ValueKind == System.Text.Json.JsonValueKind.String ? p.Default.GetString() ?? "" : ApiCatalogService.PythonValue(p.Default, p.Type), Width = 190, BackColor = Theme.Raised, ForeColor = Theme.Text };
+            var help = p.ThaiDescription ?? p.Description;
+            if (!string.IsNullOrWhiteSpace(help)) { tips.SetToolTip(label, help); tips.SetToolTip(input, help); }
             input.Margin = new Padding(0, 0, 0, 7); fields.Controls.Add(input); controls.Add((p, input));
         }
         apply.Enabled = objectName != null;
@@ -114,12 +129,14 @@ public sealed class ObjectActionPanel : UserControl
                 string value;
                 if (control is CheckBox checkbox) value = checkbox.Checked ? "True" : "False";
                 else if (control is ComboBox combo) value = ApiCatalogService.PythonString(((Choice)combo.SelectedItem!).Id);
+                else if (control is NumericUpDown number) value = number.Value.ToString(CultureInfo.InvariantCulture);
+                else if (control is VectorEditor vector) value = vector.PythonValue;
                 else
                 {
                     var raw = ((TextBox)control).Text.Trim();
                     if (p.Type == "INT") value = int.Parse(raw, CultureInfo.InvariantCulture).ToString(CultureInfo.InvariantCulture);
                     else if (p.Type == "FLOAT") value = double.Parse(raw, CultureInfo.InvariantCulture).ToString("R", CultureInfo.InvariantCulture);
-                    else if (p.Type == "STRING") value = ApiCatalogService.PythonString(raw.Trim('"', '\''));
+                    else if (p.Type == "STRING") value = ApiCatalogService.PythonString(raw);
                     else value = raw;
                 }
                 if (p.Required || !string.Equals(value, ApiCatalogService.PythonValue(p.Default, p.Type), StringComparison.Ordinal))
@@ -146,4 +163,46 @@ public sealed class ObjectActionPanel : UserControl
     }
     private sealed record Row(ApiEntry Entry) { public override string ToString() => Entry.DisplayName + " · " + Entry.Id; }
     private sealed record Choice(string Id, string Label) { public override string ToString() => Label; }
+
+    private static string FriendlyName(ApiParameter p) => p.Id switch
+    {
+        "number_cuts" => "จำนวนครั้งที่แบ่ง",
+        "smoothness" => "ความเรียบ",
+        "offset" => "ระยะ",
+        "segments" => "จำนวนขั้น",
+        "width" => "ความกว้าง",
+        "factor" => "สัดส่วน",
+        _ => p.DisplayName
+    };
+
+    private static NumericUpDown CreateNumber(ApiParameter p)
+    {
+        var number = new NumericUpDown { Width = 190, BackColor = Theme.Raised, ForeColor = Theme.Text,
+            BorderStyle = BorderStyle.FixedSingle, DecimalPlaces = p.Type == "INT" ? 0 : 3,
+            Increment = p.Type == "INT" ? 1 : 0.1m, Minimum = -1_000_000_000, Maximum = 1_000_000_000 };
+        if (p.Minimum.ValueKind == System.Text.Json.JsonValueKind.Number && p.Minimum.TryGetDouble(out var min) && double.IsFinite(min))
+            number.Minimum = (decimal)Math.Clamp(min, -1_000_000_000, 1_000_000_000);
+        if (p.Maximum.ValueKind == System.Text.Json.JsonValueKind.Number && p.Maximum.TryGetDouble(out var max) && double.IsFinite(max))
+            number.Maximum = (decimal)Math.Clamp(max, (double)number.Minimum, 1_000_000_000);
+        return number;
+    }
+
+    private sealed class VectorEditor : FlowLayoutPanel
+    {
+        private readonly List<NumericUpDown> values = [];
+        public VectorEditor(ApiParameter p)
+        {
+            Width = 190; Height = 32; WrapContents = false; BackColor = Theme.Panel;
+            var defaults = p.Default.EnumerateArray().ToArray();
+            for (int i = 0; i < p.ArrayLength; i++)
+            {
+                Controls.Add(new Label { Text = "XYZW"[i].ToString(), Width = 14, Height = 24, ForeColor = Theme.Muted, TextAlign = ContentAlignment.MiddleLeft, Margin = new Padding(0, 0, 0, 0) });
+                var n = CreateNumber(p); n.Width = p.ArrayLength == 4 ? 31 : 44; n.Margin = new Padding(0, 0, 2, 0);
+                var initial = i < defaults.Length && defaults[i].TryGetDecimal(out var val) ? val : 0;
+                n.Value = Math.Clamp(initial, n.Minimum, n.Maximum);
+                Controls.Add(n); values.Add(n);
+            }
+        }
+        public string PythonValue => "(" + string.Join(", ", values.Select(v => v.Value.ToString(CultureInfo.InvariantCulture))) + ")";
+    }
 }

@@ -179,7 +179,7 @@ public sealed class MainForm : Form
         var help = new ToolStripMenuItem("คู่มือ");
         Add(help, "คำสั่งและวิธีใช้", (_, _) => ShowHelp(), Keys.F1, false);
         Add(help, "เกี่ยวกับ มิติ สตูดิโอ", (_, _) => MessageBox.Show(this,
-            "มิติ สตูดิโอ 0.4.1\nแอป Windows Forms สำหรับสร้างโมเดลด้วย Python และปุ่มคำสั่ง\n\nคลิกขวาที่โมเดลเพื่อค้นหาคำสั่ง ปรับพารามิเตอร์ด้านขวา แล้วกดใช้กับวัตถุ\nCtrl+Space เปิดคลัง API Blender\n\nใช้ Blender จริงเป็นเอนจิน\nคำสั่งบางชนิดต้องเตรียมวัตถุ โหมด หรือหน้าต่างให้เหมาะสม",
+            "มิติ สตูดิโอ 0.4.2\nแอป Windows Forms สำหรับสร้างโมเดลด้วย Python และปุ่มคำสั่ง\n\nคลิกขวาที่โมเดลเพื่อค้นหาคำสั่ง ปรับพารามิเตอร์ด้านขวา แล้วกดใช้กับวัตถุ\nCtrl+Space เปิดคลัง API Blender\n\nใช้ Blender จริงเป็นเอนจิน\nคำสั่งบางชนิดต้องเตรียมวัตถุ โหมด หรือหน้าต่างให้เหมาะสม",
             "เกี่ยวกับ", MessageBoxButtons.OK, MessageBoxIcon.Information), idleOnly: false);
         menu.Items.AddRange([file, model, view, settings, help]);
         return menu;
