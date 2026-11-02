@@ -376,7 +376,8 @@ public sealed class MainForm : Form
         {
             status.Text = "สร้างไม่สำเร็จ — ดูข้อผิดพลาดด้านล่าง";
             Log("ข้อผิดพลาด: " + ex.Message);
-            if (lastBuild != null) Log("ยังแสดงโมเดลจากการสร้างครั้งก่อน");
+            lastBuild = null; lastBuiltSource = null; viewport.ClearScene(); objects.Items.Clear();
+            modelLabel.Text = "การสร้างล้มเหลว — ไม่มีโมเดลค้างจากครั้งก่อน";
             return false;
         }
         finally { EndOperation(cts); }

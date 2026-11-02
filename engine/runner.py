@@ -2,6 +2,7 @@
 import argparse
 import json
 import math
+import re
 import os
 from pathlib import Path
 import sys
@@ -136,8 +137,17 @@ def main():
     output.mkdir(parents=True, exist_ok=True)
     source_path = Path(args.source).resolve()
     source = source_path.read_text(encoding='utf-8-sig')
+    # Blender 4.x used BLENDER_EEVEE_NEXT; Blender 5.2 exposes BLENDER_EEVEE.
+    # Normalize this compatibility spelling before executing user code.
+    if 'BLENDER_EEVEE_NEXT' in source:
+        source = source.replace('BLENDER_EEVEE_NEXT', 'BLENDER_EEVEE')
+    # Blender 5.x collection membership accepts names, not ID objects.
+    # Keep older scripts such as ``obj not in collection.objects`` working.
+    source = re.sub(r"(\b\w+)\s+not\s+in\s+([A-Za-z_][\w\[\]'\"]*\.objects)", r"\1.name not in _miti_collection_names(\2)", source)
+    source = re.sub(r"(\b\w+)\s+in\s+([A-Za-z_][\w\[\]'\"]*\.objects)", r"\1.name in _miti_collection_names(\2)", source)
     thai_model.clear()
-    namespace = {'__name__': '__main__', '__file__': str(source_path), 'bpy': bpy, 'math': math}
+    namespace = {'__name__': '__main__', '__file__': str(source_path), 'bpy': bpy, 'math': math,
+                 '_miti_collection_names': lambda collection: {item.name for item in collection}}
     namespace.update({name: getattr(thai_model, name) for name in thai_model.__all__})
     namespace.update({name: getattr(thai_api, name) for name in thai_api.__all__})
     namespace.update({name: getattr(thai_workspace, name) for name in thai_workspace.__dict__ if not name.startswith('_')})

@@ -68,6 +68,11 @@ public sealed class ModelViewport : Control
     public bool IsSimplified => _isSimplified;
     public int SourceTriangleCount { get; private set; }
     public bool HasScene => _meshes.Count > 0;
+    public void ClearScene()
+    {
+        _meshes.Clear(); _objects.Clear(); SelectedObject = null; SourceTriangleCount = 0;
+        Invalidate(); SceneLoaded?.Invoke(this, EventArgs.Empty);
+    }
 
     [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
     public string? SelectedObject
