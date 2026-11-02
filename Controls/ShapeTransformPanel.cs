@@ -15,9 +15,9 @@ public sealed class ShapeTransformPanel : UserControl
         public override string ToString() => Label;
     }
 
-    private readonly TabControl tabs = new() { Dock = DockStyle.Fill };
-    private readonly ComboBox shapes = new() { Width = 190, DropDownStyle = ComboBoxStyle.DropDownList, BackColor = Theme.Raised, ForeColor = Theme.Text };
-    private readonly TextBox shapeName = new() { Width = 190, BackColor = Theme.Raised, ForeColor = Theme.Text };
+    private readonly StudioTabs tabs = new() { Dock = DockStyle.Fill };
+    private readonly ComboBox shapes = new StudioComboBox { Width = 220 };
+    private readonly TextBox shapeName = new() { Width = 220, BackColor = Theme.Raised, ForeColor = Theme.Text };
     private readonly VectorInput createPosition = new(Vector3.Zero, -10000, 10000);
     private readonly VectorInput createScale = new(Vector3.One, 0, 1000);
     private readonly VectorInput position = new(Vector3.Zero, -10000, 10000);
@@ -35,9 +35,10 @@ public sealed class ShapeTransformPanel : UserControl
     public ShapeTransformPanel()
     {
         BackColor = Theme.Panel;
-        var createPage = new TabPage("สร้างรูปทรง") { BackColor = Theme.Panel, ForeColor = Theme.Text };
-        var editPage = new TabPage("ย้าย·หมุน·สเกล") { BackColor = Theme.Panel, ForeColor = Theme.Text };
+        var createPage = new StudioTabPage("สร้างรูปทรง");
+        var editPage = new StudioTabPage("ย้าย·หมุน·สเกล");
         tabs.TabPages.AddRange([createPage, editPage]); Controls.Add(tabs);
+        Theme.UseDarkControls(shapes, shapeName);
         var create = MakeFlow(); createPage.Controls.Add(create);
         AddLabel(create, "รูปทรง"); create.Controls.Add(shapes);
         foreach (var shape in new[] {
@@ -54,15 +55,15 @@ public sealed class ShapeTransformPanel : UserControl
         AddLabel(create, "ตำแหน่ง X / Y / Z"); create.Controls.Add(createPosition);
         AddLabel(create, "สเกล X / Y / Z"); create.Controls.Add(createScale);
         var createButton = Theme.Button("เพิ่มรูปทรงและสร้างโมเดล", (_, _) => ApplyCreate(), true);
-        createButton.Width = 190; create.Controls.Add(createButton);
+        createButton.Width = 220; create.Controls.Add(createButton);
 
         var edit = MakeFlow(); editPage.Controls.Add(edit);
-        selectedLabel.AutoSize = false; selectedLabel.Width = 190; selectedLabel.Height = 40; edit.Controls.Add(selectedLabel);
+        selectedLabel.AutoSize = false; selectedLabel.Width = 220; selectedLabel.Height = 40; edit.Controls.Add(selectedLabel);
         AddLabel(edit, "ย้าย: ตำแหน่ง X / Y / Z"); edit.Controls.Add(position);
         AddLabel(edit, "หมุน: องศา X / Y / Z"); edit.Controls.Add(rotation);
         AddLabel(edit, "สเกล X / Y / Z"); edit.Controls.Add(scale);
         var applyButton = Theme.Button("ใช้กับวัตถุและสร้างใหม่", (_, _) => ApplyTransform(), true);
-        applyButton.Width = 190; edit.Controls.Add(applyButton);
+        applyButton.Width = 220; edit.Controls.Add(applyButton);
 
         liveLabel.AutoSize = false; liveLabel.Dock = DockStyle.Bottom; liveLabel.Height = 34; Controls.Add(liveLabel);
         shapes.SelectedIndexChanged += (_, _) => { shapeName.Text = ((Shape)shapes.SelectedItem!).DefaultName; Schedule(); };
@@ -89,7 +90,7 @@ public sealed class ShapeTransformPanel : UserControl
         WrapContents = false, Padding = new Padding(5, 10, 0, 0), BackColor = Theme.Panel };
     private static void AddLabel(FlowLayoutPanel flow, string text)
     {
-        var label = Theme.Label(text, 8.5f, Theme.Text); label.Width = 190; label.Height = 24; label.AutoSize = false;
+        var label = Theme.Label(text, 9f, Theme.Text); label.Width = 220; label.Height = 24; label.AutoSize = false;
         flow.Controls.Add(label);
     }
     private void Schedule()
@@ -137,13 +138,14 @@ public sealed class ShapeTransformPanel : UserControl
         public event EventHandler? Changed;
         public VectorInput(Vector3 initial, decimal min, decimal max)
         {
-            Width = 190; Height = 34; WrapContents = false; BackColor = Theme.Panel;
+            Width = 220; Height = 36; WrapContents = false; BackColor = Theme.Panel;
             for (int i = 0; i < 3; i++)
             {
                 Controls.Add(new Label { Text = "XYZ"[i].ToString(), Width = 13, Height = 26,
                     ForeColor = Theme.Muted, TextAlign = ContentAlignment.MiddleLeft, Margin = Padding.Empty });
-                var axis = new NumericUpDown { Width = 48, Minimum = min, Maximum = max, DecimalPlaces = 2,
+                var axis = new NumericUpDown { Width = 60, Minimum = min, Maximum = max, DecimalPlaces = 2,
                     Increment = 0.1m, BackColor = Theme.Raised, ForeColor = Theme.Text, Margin = Padding.Empty };
+                Theme.UseDarkControls(axis);
                 axis.ValueChanged += (_, _) => Changed?.Invoke(this, EventArgs.Empty);
                 axes[i] = axis; Controls.Add(axis);
             }

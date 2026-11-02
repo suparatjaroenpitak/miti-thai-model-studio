@@ -41,6 +41,7 @@ public sealed class ObjectActionPanel : UserControl
         reset.Dock = DockStyle.Bottom; reset.Height = 30;
         previewStatus.Dock = DockStyle.Bottom; previewStatus.Height = 34; previewStatus.AutoSize = false;
         Controls.Add(fields); Controls.Add(previewStatus); Controls.Add(reset); Controls.Add(apply); Controls.Add(details); Controls.Add(results); Controls.Add(search); Controls.Add(target);
+        Theme.UseDarkControls(search, results);
         search.TextChanged += (_, _) => Filter(); results.SelectedIndexChanged += (_, _) => SelectAction();
         previewTimer.Tick += (_, _) =>
         {
@@ -116,12 +117,12 @@ public sealed class ObjectActionPanel : UserControl
         foreach (var p in selected.Parameters.Where(p => p.Id != "rna_type" && !p.ReadOnly))
         {
             var label = Theme.Label(FriendlyName(p) + (p.Required ? " *" : ""), 8.5f, Theme.Text);
-            label.AutoSize = false; label.AutoEllipsis = true; label.Width = 190; label.Height = 22; fields.Controls.Add(label);
+            label.AutoSize = false; label.AutoEllipsis = true; label.Width = 220; label.Height = 23; fields.Controls.Add(label);
             Control input;
-            if (p.Type == "BOOLEAN") input = new CheckBox { Text = "เปิดใช้งาน", Checked = p.Default.ValueKind == System.Text.Json.JsonValueKind.True, ForeColor = Theme.Text, Width = 190, Height = 26 };
+            if (p.Type == "BOOLEAN") input = new CheckBox { Text = "เปิดใช้งาน", Checked = p.Default.ValueKind == System.Text.Json.JsonValueKind.True, ForeColor = Theme.Text, Width = 220, Height = 26 };
             else if (p.Type == "ENUM" && p.EnumItems.Count > 0)
             {
-                var combo = new ComboBox { DropDownStyle = ComboBoxStyle.DropDownList, Width = 190, BackColor = Theme.Raised, ForeColor = Theme.Text };
+                var combo = new StudioComboBox { Width = 220 };
                 foreach (var option in p.EnumItems) combo.Items.Add(new Choice(option.Id, option.ThaiName ?? option.Name));
                 var initial = p.Default.ValueKind == System.Text.Json.JsonValueKind.String ? p.Default.GetString() : null;
                 combo.SelectedIndex = Math.Max(0, combo.Items.Cast<Choice>().ToList().FindIndex(c => c.Id == initial)); input = combo;
@@ -135,7 +136,7 @@ public sealed class ObjectActionPanel : UserControl
                 number.Value = Math.Clamp(initial, number.Minimum, number.Maximum);
                 input = number;
             }
-            else input = new TextBox { Text = p.Type == "STRING" && p.Default.ValueKind == System.Text.Json.JsonValueKind.String ? p.Default.GetString() ?? "" : ApiCatalogService.PythonValue(p.Default, p.Type), Width = 190, BackColor = Theme.Raised, ForeColor = Theme.Text };
+            else input = new TextBox { Text = p.Type == "STRING" && p.Default.ValueKind == System.Text.Json.JsonValueKind.String ? p.Default.GetString() ?? "" : ApiCatalogService.PythonValue(p.Default, p.Type), Width = 220, BackColor = Theme.Raised, ForeColor = Theme.Text };
             var help = p.ThaiDescription ?? p.Description;
             if (!string.IsNullOrWhiteSpace(help)) { tips.SetToolTip(label, help); tips.SetToolTip(input, help); }
             input.Margin = new Padding(0, 0, 0, 7); fields.Controls.Add(input); controls.Add((p, input));
@@ -242,9 +243,10 @@ public sealed class ObjectActionPanel : UserControl
 
     private static NumericUpDown CreateNumber(ApiParameter p)
     {
-        var number = new NumericUpDown { Width = 190, BackColor = Theme.Raised, ForeColor = Theme.Text,
+        var number = new NumericUpDown { Width = 220, BackColor = Theme.Raised, ForeColor = Theme.Text,
             BorderStyle = BorderStyle.FixedSingle, DecimalPlaces = p.Type == "INT" ? 0 : 3,
             Increment = p.Type == "INT" ? 1 : 0.1m, Minimum = -1_000_000_000, Maximum = 1_000_000_000 };
+        Theme.UseDarkControls(number);
         if (p.Minimum.ValueKind == System.Text.Json.JsonValueKind.Number && p.Minimum.TryGetDouble(out var min) && double.IsFinite(min))
             number.Minimum = (decimal)Math.Clamp(min, -1_000_000_000, 1_000_000_000);
         if (p.Maximum.ValueKind == System.Text.Json.JsonValueKind.Number && p.Maximum.TryGetDouble(out var max) && double.IsFinite(max))
@@ -258,12 +260,12 @@ public sealed class ObjectActionPanel : UserControl
         public event EventHandler? Changed;
         public VectorEditor(ApiParameter p)
         {
-            Width = 190; Height = 32; WrapContents = false; BackColor = Theme.Panel;
+            Width = 220; Height = 34; WrapContents = false; BackColor = Theme.Panel;
             var defaults = p.Default.EnumerateArray().ToArray();
             for (int i = 0; i < p.ArrayLength; i++)
             {
                 Controls.Add(new Label { Text = "XYZW"[i].ToString(), Width = 14, Height = 24, ForeColor = Theme.Muted, TextAlign = ContentAlignment.MiddleLeft, Margin = new Padding(0, 0, 0, 0) });
-                var n = CreateNumber(p); n.Width = p.ArrayLength == 4 ? 31 : 44; n.Margin = new Padding(0, 0, 2, 0);
+                var n = CreateNumber(p); n.Width = p.ArrayLength == 4 ? 39 : 54; n.Margin = new Padding(0, 0, 2, 0);
                 var initial = i < defaults.Length && defaults[i].TryGetDecimal(out var val) ? val : 0;
                 n.Value = Math.Clamp(initial, n.Minimum, n.Maximum);
                 n.ValueChanged += (_, _) => Changed?.Invoke(this, EventArgs.Empty);

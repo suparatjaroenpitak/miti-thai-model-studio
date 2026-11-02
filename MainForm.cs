@@ -11,7 +11,7 @@ public sealed class MainForm : Form
     private readonly ModelViewport viewport = new() { Dock = DockStyle.Fill };
     private readonly ObjectActionPanel objectActions = new() { Dock = DockStyle.Fill };
     private readonly ShapeTransformPanel shapeTools = new() { Dock = DockStyle.Fill };
-    private readonly TabControl modelToolTabs = new() { Dock = DockStyle.Fill };
+    private readonly StudioTabs modelToolTabs = new() { Dock = DockStyle.Fill };
     private readonly ContextMenuStrip objectMenu = new();
     private readonly ToolStripTextBox objectMenuSearch = new() { Width = 230 };
     private readonly ListBox objects = new() { Dock = DockStyle.Fill, BorderStyle = BorderStyle.None,
@@ -67,13 +67,13 @@ public sealed class MainForm : Form
 
         var menu = BuildMenu();
         var header = BuildHeader();
-        var footer = new Panel { Dock = DockStyle.Bottom, Height = 32, BackColor = Theme.Panel, Padding = new Padding(14, 4, 12, 0) };
+        var footer = new Panel { Dock = DockStyle.Bottom, Height = 35, BackColor = Theme.Panel, Padding = new Padding(16, 6, 16, 0) };
         status.Dock = DockStyle.Fill; engineLabel.Dock = DockStyle.Right;
         footer.Controls.Add(status); footer.Controls.Add(engineLabel);
 
         workspaceSplit = new SplitContainer { Dock = DockStyle.Fill, BackColor = Theme.Border,
-            Size = new Size(1400, 700), SplitterDistance = 205,
-            SplitterWidth = 1, FixedPanel = FixedPanel.Panel1, Panel1MinSize = 170, Panel2MinSize = 600 };
+            Size = new Size(1400, 700), SplitterDistance = 215,
+            SplitterWidth = 2, FixedPanel = FixedPanel.Panel1, Panel1MinSize = 190, Panel2MinSize = 600 };
         workspaceSplit.Panel1.BackColor = Theme.Panel;
         workspaceSplit.Panel1.Controls.Add(BuildSidebar());
 
@@ -87,6 +87,8 @@ public sealed class MainForm : Form
         workspaceSplit.Panel2.Controls.Add(outputSplit);
         Controls.Add(workspaceSplit); Controls.Add(footer); Controls.Add(header); Controls.Add(menu);
         MainMenuStrip = menu;
+        Theme.UseDarkWindow(this);
+        Theme.UseDarkControls(objects, output);
 
         editor.CodeChanged += (_, _) =>
         {
@@ -154,11 +156,11 @@ public sealed class MainForm : Form
         FormClosing += OnClosing;
         Shown += async (_, _) =>
         {
-            workspaceSplit.SplitterDistance = 205;
+            workspaceSplit.SplitterDistance = 215;
             outputSplit.SplitterDistance = Math.Max(250, outputSplit.Height - 165);
-            editorSplit.SplitterDistance = editorSplit.Width / 2;
-            if (viewportSplit != null && viewportSplit.Width > 420)
-                viewportSplit.SplitterDistance = viewportSplit.Width - 225;
+            editorSplit.SplitterDistance = (int)(editorSplit.Width * 0.43);
+            if (viewportSplit != null && viewportSplit.Width > 480)
+                viewportSplit.SplitterDistance = viewportSplit.Width - 272;
             LoadSettings();
             var example = Path.Combine(AppContext.BaseDirectory, "examples", "01_house.py");
             SetCode(File.Exists(example) ? File.ReadAllText(example, Encoding.UTF8) : DefaultCode);
@@ -170,7 +172,7 @@ public sealed class MainForm : Form
     private MenuStrip BuildMenu()
     {
         var menu = new MenuStrip { Dock = DockStyle.Top, BackColor = Theme.Panel, ForeColor = Theme.Text,
-            Padding = new Padding(8, 3, 0, 3), Font = new Font("Leelawadee UI", 10) };
+            Padding = new Padding(16, 6, 0, 6), Font = new Font("Leelawadee UI", 10) };
         var file = new ToolStripMenuItem("ไฟล์");
         Add(file, "สร้างไฟล์ใหม่", (_, _) => NewFile(), Keys.Control | Keys.N);
         Add(file, "เปิดโค้ด…", (_, _) => OpenCode(), Keys.Control | Keys.O);
@@ -210,7 +212,7 @@ public sealed class MainForm : Form
         var help = new ToolStripMenuItem("คู่มือ");
         Add(help, "คำสั่งและวิธีใช้", (_, _) => ShowHelp(), Keys.F1, false);
         Add(help, "เกี่ยวกับ มิติ สตูดิโอ", (_, _) => MessageBox.Show(this,
-            "มิติ สตูดิโอ 0.6\nสร้างรูปทรง 8 แบบและปรับตำแหน่ง หมุน สเกลด้วยแผงด้านขวา\n\nคลิกขวาที่โมเดลเพื่อค้นหาคำสั่ง หรือใช้แท็บ รูปทรง/แปลง\nค่าที่ปรับจะแสดงภาพตัวอย่าง ก่อนกดใช้กับวัตถุเพื่อบันทึก\nCtrl+Space เปิดคลัง API Blender\n\nใช้ Blender จริงเป็นเอนจิน\nคำสั่งบางชนิดต้องเตรียมวัตถุ โหมด หรือหน้าต่างให้เหมาะสม",
+            "มิติ สตูดิโอ 0.7\nสร้างรูปทรง 8 แบบและปรับตำแหน่ง หมุน สเกลด้วยแผงด้านขวา\n\nคลิกขวาที่โมเดลเพื่อค้นหาคำสั่ง หรือใช้แท็บ รูปทรง/แปลง\nค่าที่ปรับจะแสดงภาพตัวอย่าง ก่อนกดใช้กับวัตถุเพื่อบันทึก\nCtrl+Space เปิดคลัง API Blender\n\nใช้ Blender จริงเป็นเอนจิน\nคำสั่งบางชนิดต้องเตรียมวัตถุ โหมด หรือหน้าต่างให้เหมาะสม",
             "เกี่ยวกับ", MessageBoxButtons.OK, MessageBoxIcon.Information), idleOnly: false);
         menu.Items.AddRange([file, model, view, settings, help]);
         return menu;
@@ -224,11 +226,11 @@ public sealed class MainForm : Form
 
     private Control BuildHeader()
     {
-        var header = new Panel { Dock = DockStyle.Top, Height = 83, BackColor = Theme.Panel, Padding = new Padding(18, 9, 15, 10) };
-        var brand = new FlowLayoutPanel { Dock = DockStyle.Left, Width = 370, FlowDirection = FlowDirection.TopDown, WrapContents = false };
-        brand.Controls.Add(Theme.Label("◇  มิติ สตูดิโอ", 20, Theme.Text, true));
-        brand.Controls.Add(Theme.Label("เปลี่ยนไอเดียเป็นโมเดล ด้วยโค้ดของคุณ", 9, Theme.Muted));
-        var actions = new FlowLayoutPanel { Dock = DockStyle.Right, AutoSize = true, FlowDirection = FlowDirection.LeftToRight, WrapContents = false, Padding = new Padding(0, 13, 0, 0) };
+        var header = new Panel { Dock = DockStyle.Top, Height = 98, BackColor = Theme.Panel, Padding = new Padding(22, 14, 20, 12) };
+        var brand = new FlowLayoutPanel { Dock = DockStyle.Left, Width = 390, FlowDirection = FlowDirection.TopDown, WrapContents = false };
+        brand.Controls.Add(Theme.Label("◈  มิติ สตูดิโอ", 21, Theme.Text, true));
+        brand.Controls.Add(Theme.Label("สร้าง 3 มิติด้วยโค้ดและเครื่องมือภาษาไทย", 9.5f, Theme.Muted));
+        var actions = new FlowLayoutPanel { Dock = DockStyle.Right, AutoSize = true, FlowDirection = FlowDirection.LeftToRight, WrapContents = false, Padding = new Padding(0, 12, 0, 0) };
         actions.Controls.Add(Theme.Button("เปิดโค้ด", (_, _) => OpenCode()));
         actions.Controls.Add(Theme.Button("บันทึก", (_, _) => SaveCode()));
         actions.Controls.Add(run); actions.Controls.Add(stop); actions.Controls.Add(export);
@@ -237,8 +239,8 @@ public sealed class MainForm : Form
 
     private Control BuildSidebar()
     {
-        var panel = new Panel { Dock = DockStyle.Fill, BackColor = Theme.Panel, Padding = new Padding(12, 14, 12, 12) };
-        var title = Theme.Label("วัตถุในฉาก", 11, Theme.Text, true); title.Dock = DockStyle.Top; title.Height = 32; title.AutoSize = false;
+        var panel = new Panel { Dock = DockStyle.Fill, BackColor = Theme.Panel, Padding = new Padding(14, 18, 14, 12) };
+        var title = Theme.Label("วัตถุในฉาก  ◇", 11, Theme.Text, true); title.Dock = DockStyle.Top; title.Height = 36; title.AutoSize = false;
         var details = new Panel { Dock = DockStyle.Bottom, Height = 72, Padding = new Padding(6, 8, 0, 0) };
         objectDetails.Dock = DockStyle.Fill; details.Controls.Add(objectDetails);
         var examples = new FlowLayoutPanel { Dock = DockStyle.Bottom, Height = 278, FlowDirection = FlowDirection.TopDown, WrapContents = false, Padding = new Padding(0, 14, 0, 0) };
@@ -302,8 +304,8 @@ public sealed class MainForm : Form
         var info = new Panel { Dock = DockStyle.Bottom, Height = 32, BackColor = Theme.Panel, Padding = new Padding(12, 6, 0, 0) };
         modelLabel.Dock = DockStyle.Fill; info.Controls.Add(modelLabel);
         modelToolTabs.TabPages.Clear();
-        var actionPage = new TabPage("คำสั่ง") { BackColor = Theme.Panel };
-        var toolsPage = new TabPage("รูปทรง/แปลง") { BackColor = Theme.Panel };
+        var actionPage = new StudioTabPage("คำสั่ง");
+        var toolsPage = new StudioTabPage("รูปทรง/แปลง");
         actionPage.Controls.Add(objectActions); toolsPage.Controls.Add(shapeTools);
         modelToolTabs.TabPages.AddRange([actionPage, toolsPage]); modelToolTabs.SelectedIndex = 1;
         var body = new SplitContainer { Dock = DockStyle.Fill, Orientation = Orientation.Vertical, SplitterWidth = 3, BackColor = Theme.Border, FixedPanel = FixedPanel.Panel2 };

@@ -36,6 +36,7 @@ public sealed class CodeEditor : UserControl
             SelectionTabs = [36, 72, 108, 144, 180, 216, 252, 288] };
         gutter = new Panel { Dock = DockStyle.Left, Width = 48, BackColor = Theme.Background };
         Controls.Add(editor); Controls.Add(gutter);
+        Theme.UseDarkControls(editor);
         gutter.Paint += (_, e) => PaintGutter(e.Graphics);
         editor.VScroll += (_, _) => gutter.Invalidate();
         editor.Resize += (_, _) => gutter.Invalidate();
