@@ -15,12 +15,15 @@ public sealed class ObjectActionPanel : UserControl
     private readonly Button apply;
     private readonly Button reset;
     private readonly ToolTip tips = new() { AutoPopDelay = 15000, InitialDelay = 300 };
+    private readonly System.Windows.Forms.Timer previewTimer = new() { Interval = 650 };
     private readonly List<(ApiParameter parameter, Control control)> controls = [];
     private List<ApiEntry> inventory = [];
     private List<ApiEntry> matches = [];
     private ApiEntry? selected;
     private string? objectName;
     public event EventHandler<string>? ApplyRequested;
+    public event EventHandler<string>? PreviewRequested;
+    public event EventHandler? PreviewInvalidated;
 
     public ObjectActionPanel()
     {
@@ -33,6 +36,12 @@ public sealed class ObjectActionPanel : UserControl
         reset.Dock = DockStyle.Bottom; reset.Height = 30;
         Controls.Add(fields); Controls.Add(reset); Controls.Add(apply); Controls.Add(details); Controls.Add(results); Controls.Add(search); Controls.Add(target);
         search.TextChanged += (_, _) => Filter(); results.SelectedIndexChanged += (_, _) => SelectAction();
+        previewTimer.Tick += (_, _) =>
+        {
+            previewTimer.Stop();
+            try { if (selected != null && objectName != null) PreviewRequested?.Invoke(this, GenerateSnippet()); }
+            catch (Exception) { /* Wait for a valid value; Apply will show the exact input error. */ }
+        };
         Load += async (_, _) => await LoadInventoryAsync();
     }
 
@@ -58,7 +67,7 @@ public sealed class ObjectActionPanel : UserControl
             details.Text = "กำลังอ่านคำสั่ง Blender…";
             var catalog = await ApiCatalogService.LoadAsync();
             if (IsDisposed) return;
-            inventory = catalog.Entries.Where(e => e.Kind == "operator").ToList();
+            inventory = catalog.Entries.Where(e => e.Kind == "operator" && IsModelingOperator(e.Id)).ToList();
             Filter();
         }
         catch (Exception ex) { details.Text = "อ่านคลังคำสั่งไม่ได้: " + ex.Message; }
@@ -66,6 +75,7 @@ public sealed class ObjectActionPanel : UserControl
 
     private void Filter()
     {
+        previewTimer.Stop(); PreviewInvalidated?.Invoke(this, EventArgs.Empty);
         var q = search.Text.Trim();
         var normalized = q is "แบ่งจุด" or "การแบ่งจุด" or "แบ่งหน้า" ? "subdivide" : q;
         results.BeginUpdate(); results.Items.Clear(); matches = [];
@@ -84,6 +94,7 @@ public sealed class ObjectActionPanel : UserControl
 
     private void SelectAction()
     {
+        previewTimer.Stop(); PreviewInvalidated?.Invoke(this, EventArgs.Empty);
         selected = (results.SelectedItem as Row)?.Entry;
         controls.Clear(); fields.Controls.Clear();
         if (selected == null) { apply.Enabled = false; return; }
@@ -114,6 +125,11 @@ public sealed class ObjectActionPanel : UserControl
             var help = p.ThaiDescription ?? p.Description;
             if (!string.IsNullOrWhiteSpace(help)) { tips.SetToolTip(label, help); tips.SetToolTip(input, help); }
             input.Margin = new Padding(0, 0, 0, 7); fields.Controls.Add(input); controls.Add((p, input));
+            if (input is NumericUpDown numericInput) numericInput.ValueChanged += (_, _) => SchedulePreview();
+            else if (input is CheckBox checkbox) checkbox.CheckedChanged += (_, _) => SchedulePreview();
+            else if (input is ComboBox combo) combo.SelectedIndexChanged += (_, _) => SchedulePreview();
+            else if (input is TextBox text) text.TextChanged += (_, _) => SchedulePreview();
+            else if (input is VectorEditor vector) vector.Changed += (_, _) => SchedulePreview();
         }
         apply.Enabled = objectName != null;
     }
@@ -123,6 +139,28 @@ public sealed class ObjectActionPanel : UserControl
         if (selected == null || objectName == null) return;
         try
         {
+            previewTimer.Stop(); PreviewInvalidated?.Invoke(this, EventArgs.Empty);
+            ApplyRequested?.Invoke(this, GenerateSnippet());
+        }
+        catch (Exception ex) { MessageBox.Show(this, "ค่าพารามิเตอร์ไม่ถูกต้อง: " + ex.Message, "ตรวจค่า", MessageBoxButtons.OK, MessageBoxIcon.Warning); }
+    }
+
+    private void SchedulePreview()
+    {
+        previewTimer.Stop(); PreviewInvalidated?.Invoke(this, EventArgs.Empty);
+        if (selected != null && objectName != null) previewTimer.Start();
+    }
+
+    public static bool IsModelingOperator(string id)
+    {
+        var path = id.StartsWith("bpy.ops.") ? id[8..] : id;
+        return path.StartsWith("mesh.", StringComparison.Ordinal) || path.StartsWith("object.", StringComparison.Ordinal)
+            || path.StartsWith("transform.", StringComparison.Ordinal) || path.StartsWith("uv.", StringComparison.Ordinal);
+    }
+
+    private string GenerateSnippet()
+    {
+        if (selected == null || objectName == null) throw new InvalidOperationException("ยังไม่ได้เลือกวัตถุหรือคำสั่ง");
             var args = new List<string>();
             foreach (var (p, control) in controls)
             {
@@ -157,9 +195,7 @@ public sealed class ObjectActionPanel : UserControl
             foreach (var arg in args) code.Append(", ").Append(arg);
             code.AppendLine(")");
             if (mode == "EDIT") code.AppendLine("bpy.ops.object.mode_set(mode='OBJECT')");
-            ApplyRequested?.Invoke(this, code.ToString());
-        }
-        catch (Exception ex) { MessageBox.Show(this, "ค่าพารามิเตอร์ไม่ถูกต้อง: " + ex.Message, "ตรวจค่า", MessageBoxButtons.OK, MessageBoxIcon.Warning); }
+            return code.ToString();
     }
     private sealed record Row(ApiEntry Entry) { public override string ToString() => Entry.DisplayName + " · " + Entry.Id; }
     private sealed record Choice(string Id, string Label) { public override string ToString() => Label; }
@@ -190,6 +226,7 @@ public sealed class ObjectActionPanel : UserControl
     private sealed class VectorEditor : FlowLayoutPanel
     {
         private readonly List<NumericUpDown> values = [];
+        public event EventHandler? Changed;
         public VectorEditor(ApiParameter p)
         {
             Width = 190; Height = 32; WrapContents = false; BackColor = Theme.Panel;
@@ -200,6 +237,7 @@ public sealed class ObjectActionPanel : UserControl
                 var n = CreateNumber(p); n.Width = p.ArrayLength == 4 ? 31 : 44; n.Margin = new Padding(0, 0, 2, 0);
                 var initial = i < defaults.Length && defaults[i].TryGetDecimal(out var val) ? val : 0;
                 n.Value = Math.Clamp(initial, n.Minimum, n.Maximum);
+                n.ValueChanged += (_, _) => Changed?.Invoke(this, EventArgs.Empty);
                 Controls.Add(n); values.Add(n);
             }
         }

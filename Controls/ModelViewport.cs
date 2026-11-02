@@ -104,8 +104,12 @@ public sealed class ModelViewport : Control
     public event EventHandler<string>? ObjectSelected;
     public event EventHandler<string>? ObjectContextRequested;
 
-    public void LoadScene(string previewPath)
+    public void LoadScene(string previewPath, bool preserveView = false)
     {
+        var previousTarget = _target;
+        var previousRadius = _radius;
+        var previousDistance = _distance;
+        var previousSelection = _selectedObject;
         using var stream = File.OpenRead(previewPath);
         using var document = JsonDocument.Parse(stream, new JsonDocumentOptions { MaxDepth = 32 });
         if (!document.RootElement.TryGetProperty("objects", out var objects) || objects.ValueKind != JsonValueKind.Array)
@@ -169,6 +173,11 @@ public sealed class ModelViewport : Control
             && sourceCount.TryGetInt32(out int count) ? count : TriangleCount;
         _triangles.Clear();
         FitScene();
+        if (preserveView)
+        {
+            _target = previousTarget; _radius = previousRadius; _distance = previousDistance;
+            SelectedObject = previousSelection;
+        }
         SceneLoaded?.Invoke(this, EventArgs.Empty);
     }
 

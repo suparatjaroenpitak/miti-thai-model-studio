@@ -56,6 +56,19 @@ public sealed class BlenderService
         return result;
     }
 
+    public async Task<string> PreviewAsync(string blenderPath, string source, string outputDirectory, CancellationToken cancellationToken)
+    {
+        string job = Path.Combine(Path.GetFullPath(outputDirectory), DateTime.UtcNow.ToString("yyyyMMdd-HHmmss") + "-" + Guid.NewGuid().ToString("N")[..8]);
+        Directory.CreateDirectory(job);
+        string sourcePath = Path.Combine(job, "source.py");
+        await File.WriteAllTextAsync(sourcePath, source, new UTF8Encoding(false), cancellationToken);
+        await RunAsync(blenderPath, ["--background", "--factory-startup", "--python-exit-code", "1", "--python", RunnerPath(), "--", "--source", sourcePath, "--output", job, "--preview-only"], null, cancellationToken);
+        string preview = Path.Combine(job, "preview.json");
+        if (!File.Exists(Path.Combine(job, "preview-success.json")) || !File.Exists(preview) || new FileInfo(preview).Length == 0)
+            throw new InvalidOperationException("Blender ไม่ส่งภาพตัวอย่างกลับมา");
+        return preview;
+    }
+
     public async Task ExportAsync(string blenderPath, string blendPath, string destination, string format,
         IProgress<string>? progress, CancellationToken cancellationToken)
     {

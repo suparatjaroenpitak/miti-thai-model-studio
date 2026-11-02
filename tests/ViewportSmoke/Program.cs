@@ -20,6 +20,8 @@ internal static class Program
         if (viewport.Objects.Count != 1 || viewport.VertexCount != 8 || viewport.TriangleCount != 12)
             throw new Exception("Loaded mesh statistics differ from real input.");
         viewport.SelectedObject = "กล่องทดสอบ";
+        viewport.LoadScene(preview, preserveView: true);
+        if (viewport.SelectedObject != "กล่องทดสอบ") throw new Exception("Live preview lost the selected object.");
         viewport.SaveScreenshot(Path.Combine(artifacts, "viewport-smoke.png"));
         foreach (string view in new[] { "top", "front", "right", "isometric" })
         {

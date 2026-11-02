@@ -127,6 +127,7 @@ def main():
     parser.add_argument('--export')
     parser.add_argument('--format', choices=['blend', 'glb', 'obj', 'stl'])
     parser.add_argument('--window-context', action='store_true')
+    parser.add_argument('--preview-only', action='store_true')
     args = parser.parse_args(sys.argv[sys.argv.index('--') + 1:] if '--' in sys.argv else [])
     if args.export:
         export_file(args.export, args.format)
@@ -155,6 +156,10 @@ def main():
     exec(compile(source, str(source_path), 'exec'), namespace, namespace)
     bpy.context.view_layer.update()
     write_preview(output / 'preview.json')
+    if args.preview_only:
+        (output / 'preview-success.json').write_text(json.dumps({'success': True}), encoding='utf-8')
+        log('PREVIEW_SUCCESS')
+        return
     export_file(output / 'scene.blend', 'blend')
     export_file(output / 'scene.glb', 'glb')
     # Written last: consumers must never mistake partial or failed output for success.

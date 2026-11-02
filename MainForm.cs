@@ -30,6 +30,9 @@ public sealed class MainForm : Form
     private readonly string dataDir = Path.Combine(AppContext.BaseDirectory, "UserData");
     private readonly List<ToolStripMenuItem> idleItems = [];
     private CancellationTokenSource? operation;
+    private CancellationTokenSource? previewOperation;
+    private int previewVersion;
+    private bool livePreviewShowing;
     private BuildResult? lastBuild;
     private string? lastBuiltSource;
     private string? currentPath;
@@ -93,9 +96,12 @@ public sealed class MainForm : Form
         objectActions.ApplyRequested += async (_, code) =>
         {
             if (Busy) return;
+            CancelLivePreview();
             editor.AppendSnippet(code);
             await BuildModelAsync();
         };
+        objectActions.PreviewInvalidated += (_, _) => CancelLivePreview();
+        objectActions.PreviewRequested += async (_, code) => await ShowLivePreviewAsync(code);
         objects.MouseUp += (_, e) =>
         {
             if (e.Button != MouseButtons.Right) return;
@@ -179,7 +185,7 @@ public sealed class MainForm : Form
         var help = new ToolStripMenuItem("คู่มือ");
         Add(help, "คำสั่งและวิธีใช้", (_, _) => ShowHelp(), Keys.F1, false);
         Add(help, "เกี่ยวกับ มิติ สตูดิโอ", (_, _) => MessageBox.Show(this,
-            "มิติ สตูดิโอ 0.4.2\nแอป Windows Forms สำหรับสร้างโมเดลด้วย Python และปุ่มคำสั่ง\n\nคลิกขวาที่โมเดลเพื่อค้นหาคำสั่ง ปรับพารามิเตอร์ด้านขวา แล้วกดใช้กับวัตถุ\nCtrl+Space เปิดคลัง API Blender\n\nใช้ Blender จริงเป็นเอนจิน\nคำสั่งบางชนิดต้องเตรียมวัตถุ โหมด หรือหน้าต่างให้เหมาะสม",
+            "มิติ สตูดิโอ 0.5\nแอป Windows Forms สำหรับสร้างโมเดลด้วย Python และปุ่มคำสั่ง\n\nคลิกขวาที่โมเดลเพื่อค้นหาคำสั่ง ปรับพารามิเตอร์ด้านขวา แล้วกดใช้กับวัตถุ\nค่าพารามิเตอร์จะแสดงภาพตัวอย่างใหม่อัตโนมัติเมื่อหยุดปรับชั่วครู่\nCtrl+Space เปิดคลัง API Blender\n\nใช้ Blender จริงเป็นเอนจิน\nคำสั่งบางชนิดต้องเตรียมวัตถุ โหมด หรือหน้าต่างให้เหมาะสม",
             "เกี่ยวกับ", MessageBoxButtons.OK, MessageBoxIcon.Information), idleOnly: false);
         menu.Items.AddRange([file, model, view, settings, help]);
         return menu;
@@ -397,6 +403,7 @@ public sealed class MainForm : Form
     private async Task<bool> BuildModelAsync()
     {
         if (Busy) return false;
+        CancelLivePreview();
         if (!EnsureBlender()) return false;
         var source = editor.Code;
         var cts = BeginOperation("กำลังสร้างโมเดล…"); output.Clear();
@@ -424,6 +431,8 @@ public sealed class MainForm : Form
         {
             status.Text = "สร้างไม่สำเร็จ — ดูข้อผิดพลาดด้านล่าง";
             Log("ข้อผิดพลาด: " + ex.Message);
+            if (ex.Message.Contains("mask.add_vertex", StringComparison.OrdinalIgnoreCase))
+                Log("คำสั่ง mask.add_vertex เป็นของ Mask Editor ไม่ใช่เมช: ลบบรรทัดนี้จากโค้ด แล้วค้นหา 'แบ่งจุด' เพื่อใช้ mesh.subdivide");
             lastBuild = null; lastBuiltSource = null; viewport.ClearScene(); objects.Items.Clear();
             modelLabel.Text = "การสร้างล้มเหลว — ไม่มีโมเดลค้างจากครั้งก่อน";
             return false;
@@ -431,9 +440,54 @@ public sealed class MainForm : Form
         finally { EndOperation(cts); }
     }
 
+    private void CancelLivePreview()
+    {
+        previewVersion++;
+        previewOperation?.Cancel();
+        previewOperation = null;
+        if (livePreviewShowing && lastBuild != null && File.Exists(lastBuild.PreviewPath))
+        {
+            try { viewport.LoadScene(lastBuild.PreviewPath, preserveView: true); }
+            catch (Exception) { }
+        }
+        livePreviewShowing = false;
+        if (!Busy) export.Enabled = lastBuild != null;
+    }
+
+    private async Task ShowLivePreviewAsync(string snippet)
+    {
+        if (Busy || blenderPath == null) return;
+        CancelLivePreview();
+        var current = ++previewVersion;
+        var cts = new CancellationTokenSource(); previewOperation = cts;
+        status.Text = "กำลังอัปเดตภาพตัวอย่างตามพารามิเตอร์…";
+        export.Enabled = false;
+        try
+        {
+            var path = await blender.PreviewAsync(blenderPath, editor.Code + snippet, Path.Combine(dataDir, "Previews"), cts.Token);
+            if (cts.IsCancellationRequested || current != previewVersion || IsDisposed || Busy) return;
+            viewport.LoadScene(path, preserveView: true);
+            livePreviewShowing = true;
+            status.Text = "ภาพตัวอย่างสด — กด ใช้กับวัตถุและสร้างใหม่ เพื่อบันทึกผล";
+        }
+        catch (OperationCanceledException) { }
+        catch (Exception ex)
+        {
+            if (current == previewVersion) status.Text = ex.Message.Contains("mask.add_vertex", StringComparison.OrdinalIgnoreCase)
+                ? "โค้ดเดิมมี mask.add_vertex (Mask Editor) — ลบบรรทัดนี้แล้วเลือกคำสั่งเมชใหม่"
+                : "แสดงภาพตัวอย่างไม่ได้: " + ex.Message.Split('\n')[0];
+        }
+        finally
+        {
+            if (ReferenceEquals(previewOperation, cts)) { previewOperation = null; if (!livePreviewShowing && !Busy) export.Enabled = lastBuild != null; }
+            cts.Dispose();
+        }
+    }
+
     private async Task ExportModelAsync()
     {
         if (Busy) return;
+        if (livePreviewShowing) { status.Text = "กด ใช้กับวัตถุและสร้างใหม่ ก่อนส่งออกภาพตัวอย่างที่ปรับค่า"; return; }
         if ((lastBuild == null || lastBuiltSource != editor.Code) && !await BuildModelAsync()) return;
         await Task.Delay(5000);
         using var dialog = new SaveFileDialog { Title = "ส่งออกโมเดล", FileName = "โมเดลของฉัน",
@@ -464,7 +518,7 @@ public sealed class MainForm : Form
     {
         if (operation == cts) operation = null;
         cts.Dispose(); if (closing || IsDisposed) return;
-        run.Enabled = true; export.Enabled = true; stop.Enabled = false; editor.IsReadOnly = false;
+        run.Enabled = true; export.Enabled = lastBuild != null && !livePreviewShowing; stop.Enabled = false; editor.IsReadOnly = false;
         foreach (var item in idleItems) item.Enabled = true;
     }
     private void Log(string text)
@@ -537,7 +591,7 @@ public sealed class MainForm : Form
     private void OnClosing(object? sender, FormClosingEventArgs e)
     {
         if (!ConfirmDiscard()) { e.Cancel = true; return; }
-        closing = true; operation?.Cancel();
+        closing = true; CancelLivePreview(); operation?.Cancel();
     }
     private void ShowHelp()
     {

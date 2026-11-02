@@ -45,5 +45,23 @@ internal static class Program
         apply.PerformClick();
         if (emitted == null || !emitted.Contains("number_cuts=2")) throw new Exception("Parameter selection did not generate the expected command");
         Console.WriteLine("PARAMETER_UI_SUCCESS: typed input and Blender bounds");
+        if (ObjectActionPanel.IsModelingOperator("bpy.ops.mask.add_vertex")) throw new Exception("Mask editor command appears as mesh modeling");
+        panel.SetQuery("mask.add_vertex");
+        if (panel.Matches.Count != 0) throw new Exception("Mask editor command appears in object search");
+        panel.SetQuery("bpy.ops.mesh.subdivide"); panel.Choose(panel.Matches.First(e => e.Id == "bpy.ops.mesh.subdivide"));
+        string? preview = null; panel.PreviewRequested += (_, code) => preview = code;
+        fields = (FlowLayoutPanel)typeof(ObjectActionPanel).GetField("fields", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(panel)!;
+        fields.Controls.OfType<NumericUpDown>().First().Value = 3;
+        timer.Restart();
+        while (preview == null && timer.Elapsed < TimeSpan.FromSeconds(3)) { Application.DoEvents(); Thread.Sleep(20); }
+        if (preview == null || !preview.Contains("number_cuts=3")) throw new Exception("Live preview was not scheduled with updated parameter");
+        Console.WriteLine("LIVE_PREVIEW_UI_SUCCESS: debounce generated updated command");
+        var blender = BlenderService.FindBlender() ?? throw new Exception("Blender not installed for preview smoke test");
+        var source = "import bpy\nbpy.ops.mesh.primitive_cube_add()\nbpy.context.object.name = 'CubeActionSmoke'\n" + preview;
+        var previewPath = Task.Run(() => new BlenderService().PreviewAsync(blender, source,
+            Path.Combine(directory.FullName, "artifacts", "preview-service-smoke"), CancellationToken.None)).GetAwaiter().GetResult();
+        if (!File.Exists(previewPath) || File.Exists(Path.Combine(Path.GetDirectoryName(previewPath)!, "scene.glb")))
+            throw new Exception("Preview service did not create a lightweight preview");
+        Console.WriteLine("PREVIEW_SERVICE_SUCCESS: Blender generated updated preview without export");
     }
 }
