@@ -9,7 +9,7 @@
     <AssemblyName>MitiStudio</AssemblyName>
     <RootNamespace>ThaiModelStudio</RootNamespace>
     <ApplicationHighDpiMode>PerMonitorV2</ApplicationHighDpiMode>
-    <Version>0.9.0</Version>
+    <Version>0.10.0</Version>
     <Product>มิติ สตูดิโอ</Product>
     <Description>สตูดิโอโมเดล 3 มิติแบบ GUI สองภาษา พร้อมเครื่องมือ Blender และ ZBrush-style</Description>
   </PropertyGroup>
@@ -23,6 +23,7 @@
     <None Update="docs\thai-api-runtime.md" CopyToPublishDirectory="PreserveNewest" />
     <None Update="docs\Blender-REA.md" CopyToPublishDirectory="PreserveNewest" />
     <None Update="docs\Function-Library.md" CopyToPublishDirectory="PreserveNewest" />
+    <None Update="docs\ZBrush-Engine.md" CopyToPublishDirectory="PreserveNewest" />
     <None Update="docs\rea\**\*" CopyToPublishDirectory="PreserveNewest" />
     <Compile Remove="tests\**\*.cs" />
   </ItemGroup>

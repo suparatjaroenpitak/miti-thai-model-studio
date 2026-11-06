@@ -111,6 +111,20 @@ public sealed class BlenderService
         }
     }
 
+    public async Task ExportSelectionObjAsync(string blenderPath, string blendPath, string objectName,
+        string destination, IProgress<string>? progress, CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrWhiteSpace(objectName)) throw new ArgumentException("เลือกวัตถุก่อนส่งไป ZBrush", nameof(objectName));
+        if (!File.Exists(blendPath)) throw new FileNotFoundException("ไม่พบฉาก Blender", blendPath);
+        string output = Path.GetFullPath(destination);
+        Directory.CreateDirectory(Path.GetDirectoryName(output)!);
+        await RunAsync(blenderPath, ["--background", Path.GetFullPath(blendPath), "--python-exit-code", "1",
+            "--python", RunnerPath(), "--", "--export", output, "--format", "obj", "--selected-object", objectName],
+            progress, cancellationToken);
+        if (!File.Exists(output) || new FileInfo(output).Length == 0)
+            throw new InvalidOperationException("Blender ส่งออกวัตถุที่เลือกไม่สำเร็จ");
+    }
+
     private static void CommitExport(string staging, string parent, string primary)
     {
         string backups = Path.Combine(staging, "_backup");

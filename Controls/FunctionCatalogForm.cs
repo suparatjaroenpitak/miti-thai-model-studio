@@ -197,6 +197,13 @@ public sealed class FunctionCatalogForm : Form
         if (list.CurrentCell == null || list.CurrentCell.RowIndex < 0 || list.CurrentCell.RowIndex >= visible.Count) return;
         var row = visible[list.CurrentCell.RowIndex];
         if (row.Tool?.Panel is int panel) { ToolPanel = panel; DialogResult = DialogResult.OK; Close(); return; }
-        if (row.Entry?.Kind == "operator") { BlenderOperator = row.Entry; DialogResult = DialogResult.OK; Close(); }
+        if (row.Tool != null)
+        {
+            count.Text = $"{row.DisplayName}: ใช้เมนู File → Export Model หรือปุ่มส่งออกบนแถบด้านบน · Use File → Export Model";
+            return;
+        }
+        if (row.Entry?.Kind == "operator") { BlenderOperator = row.Entry; DialogResult = DialogResult.OK; Close(); return; }
+        if (row.Entry != null)
+            count.Text = $"{row.DisplayName}: รายการข้อมูล API ไม่ใช่คำสั่ง — ใช้ได้ผ่านแท็บ Functions หรือคลัง Blender API · API data, not an operator";
     }
 }

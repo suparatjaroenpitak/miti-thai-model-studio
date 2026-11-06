@@ -14,6 +14,7 @@ public sealed class MainForm : Form
     private readonly TopologyPanel topologyTools = new() { Dock = DockStyle.Fill };
     private readonly MaskPanel maskTools = new() { Dock = DockStyle.Fill };
     private readonly MaterialPanel materialTools = new() { Dock = DockStyle.Fill };
+    private readonly ZBrushEnginePanel zbrushTools = new() { Dock = DockStyle.Fill };
     private readonly ObjectActionPanel objectActions = new() { Dock = DockStyle.Fill };
     private readonly ToolPalette modelToolTabs = new() { Dock = DockStyle.Fill };
     private readonly ContextMenuStrip objectMenu = new();
@@ -33,6 +34,7 @@ public sealed class MainForm : Form
     private readonly Button stop;
     private readonly Button export;
     private readonly BlenderService blender = new();
+    private readonly ZBrushService zbrush = new();
     private readonly Stack<(string After, string Before)> sculptHistory = new();
     private readonly string dataDir = Path.Combine(AppContext.BaseDirectory, "UserData");
     private readonly List<ToolStripMenuItem> idleItems = [];
@@ -50,6 +52,7 @@ public sealed class MainForm : Form
     private string? lastBuiltSource;
     private string? currentPath;
     private string? blenderPath;
+    private string? zbrushPath;
     private bool dirty;
     private bool loading;
     private bool closing;
@@ -156,6 +159,8 @@ public sealed class MainForm : Form
         topologyTools.ApplyRequested += async (_, code) => await ApplySnippetAsync(code, "กำลังปรับโครงสร้างโมเดล…");
         maskTools.ApplyRequested += async (_, code) => await ApplySnippetAsync(code, "กำลังปรับมาสก์…");
         materialTools.ApplyRequested += async (_, code) => await ApplySnippetAsync(code, "กำลังใช้วัสดุ…");
+        zbrushTools.ApplyRequested += async (_, code) => await ApplySnippetAsync(code, "กำลังทำงานด้วยเอนจิน ZBrush-style…");
+        zbrushTools.NativeOpenRequested += async (_, _) => await OpenInZBrushAsync();
         objectActions.ActionSelected += (_, id) =>
         {
             viewport.ShowTopology = id == "bpy.ops.mesh.subdivide";
@@ -230,9 +235,11 @@ public sealed class MainForm : Form
         Add(model, "Topology Tools · โครงสร้าง…", (_, _) => ShowTool(3));
         Add(model, "Mask Tools · มาสก์…", (_, _) => ShowTool(4));
         Add(model, "Material · วัสดุ…", (_, _) => ShowTool(5));
+        Add(model, "ZBrush Engine · เอนจิน ZBrush…", (_, _) => ShowTool(6));
         Add(model, "Function Library · คลังฟังก์ชัน Blender + ZBrush…", (_, _) => ShowFunctionLibrary(), Keys.Control | Keys.Shift | Keys.F);
         Add(model, "Build · สร้างจากเครื่องมือ", async (_, _) => await BuildModelAsync(), Keys.F5);
         Add(model, "Open in Blender · เปิดใน Blender", (_, _) => OpenInBlender());
+        Add(model, "Open selected in ZBrush · เปิดวัตถุใน ZBrush", async (_, _) => await OpenInZBrushAsync());
 
         var sculpt = new ToolStripMenuItem("Sculpt · ปั้น");
         Add(sculpt, "Sculpt Mode · เปิดโหมดปั้น", (_, _) => OpenSculpt());
@@ -267,16 +274,18 @@ public sealed class MainForm : Form
 
         var settings = new ToolStripMenuItem("Settings · ตั้งค่า");
         Add(settings, "Blender Path · ตำแหน่ง Blender…", (_, _) => SelectBlender());
+        Add(settings, "ZBrush Path · ตำแหน่ง ZBrush…", (_, _) => SelectZBrush());
         var help = new ToolStripMenuItem("Help · ช่วยเหลือ");
         Add(help, "Guide · คำสั่งและวิธีใช้", (_, _) => ShowHelp(), Keys.F1, false);
         Add(help, "ZBrush-style tools · ตารางเทียบ", (_, _) => ShowZBrushMap(), idleOnly: false);
         Add(help, "About · เกี่ยวกับ มิติ สตูดิโอ", (_, _) => MessageBox.Show(this,
-            "มิติ สตูดิโอ 0.9.0\nสตูดิโอโมเดล 3 มิติแบบ GUI · Bilingual GUI studio\n\n" +
+            "มิติ สตูดิโอ 0.10.0\nสตูดิโอโมเดล 3 มิติแบบ GUI · Bilingual GUI studio\n\n" +
             "สร้างรูปทรง ปั้นด้วยหัวแปรงแบบ ZBrush ปรับโครงสร้าง มาสก์ ใส่วัสดุ และส่งออก\n" +
             "ทุกคำสั่งทำงานผ่าน Blender ที่ติดตั้งแยกไว้\n" +
+            "มีเครื่องมือ ZBrush-style ที่ทำงานบน engine ของ Blender\n" +
             "โหมดสคริปต์เป็นตัวเลือกเสริม ปิดไว้เป็นค่าเริ่มต้น\n\n" +
-            "REA: ตรวจ Blender executable/resources และ API catalog เท่านั้น\n" +
-            "ZBrush ไม่ได้ติดตั้งในเครื่องนี้ จึงยังไม่มีหลักฐาน REA ของ ZBrush",
+            "REA: ตรวจ Blender และ ZBrush executable/resources แล้ว\n" +
+            "ZBrush native API รับ OBJ ได้เมื่อ ZBrush และใบรับรองระบบพร้อมใช้งาน",
             "เกี่ยวกับ · About", MessageBoxButtons.OK, MessageBoxIcon.Information), idleOnly: false);
         menu.Items.AddRange([file, model, sculpt, view, script, settings, help]);
         return menu;
@@ -390,6 +399,8 @@ public sealed class MainForm : Form
         mask.Controls.Add(maskTools);
         var material = modelToolTabs.Add("Material\nวัสดุ");
         material.Controls.Add(materialTools);
+        var zbrush = modelToolTabs.Add("ZBrush\nเอนจิน");
+        zbrush.Controls.Add(zbrushTools);
         modelToolTabs.SelectedIndex = 2;
         modelToolTabs.SelectedIndexChanged += (_, _) =>
         {
@@ -418,6 +429,8 @@ public sealed class MainForm : Form
 
     private void SelectPanels(string? name)
     {
+        zbrushTools.SetObjects(viewport.Objects.Select(o => o.Name));
+        zbrushTools.SetTargetObject(name);
         objectActions.SetTargetObject(name ?? "");
         topologyTools.SetTargetObject(name);
         maskTools.SetTargetObject(name);
@@ -732,6 +745,7 @@ public sealed class MainForm : Form
             viewport.LoadScene(result.PreviewPath);
             lastBuild = result; lastBuiltSource = source;
             objects.Items.Clear(); foreach (var item in viewport.Objects) objects.Items.Add(item.Name);
+            zbrushTools.SetObjects(viewport.Objects.Select(o => o.Name));
             var selectedIndex = selectedBefore == null ? -1 : objects.Items.IndexOf(selectedBefore);
             if (selectedIndex >= 0) objects.SelectedIndex = selectedIndex;
             else { objectDetails.Text = "เลือกวัตถุเพื่อดูรายละเอียด\nSelect an object"; SelectPanels(null); }
@@ -874,15 +888,22 @@ public sealed class MainForm : Form
         try
         {
             var path = Path.Combine(dataDir, "settings.json");
-            if (File.Exists(path)) blenderPath = JsonSerializer.Deserialize<Settings>(File.ReadAllText(path))?.BlenderPath;
+            if (File.Exists(path))
+            {
+                var saved = JsonSerializer.Deserialize<Settings>(File.ReadAllText(path));
+                blenderPath = saved?.BlenderPath;
+                zbrushPath = saved?.ZBrushPath;
+            }
         }
         catch (Exception ex) { Log("อ่านการตั้งค่าไม่ได้: " + ex.Message); }
         if (blenderPath == null || !File.Exists(blenderPath)) blenderPath = BlenderService.FindBlender();
+        if (zbrushPath == null || !File.Exists(zbrushPath)) zbrushPath = ZBrushService.FindZBrush();
         UpdateEngineLabel();
     }
     private void UpdateEngineLabel()
     {
-        engineLabel.Text = blenderPath == null ? "ยังไม่พบ Blender · Blender not found" : "BLENDER  ·  พร้อมใช้งาน · Ready";
+        engineLabel.Text = blenderPath == null ? "ยังไม่พบ Blender · Blender not found" :
+            zbrushPath == null ? "BLENDER · Ready" : "BLENDER · Ready   ZBRUSH · Installed";
     }
     private bool EnsureBlender()
     {
@@ -896,9 +917,28 @@ public sealed class MainForm : Form
         using var dialog = new OpenFileDialog { Title = "เลือก blender.exe · Select Blender", Filter = "Blender (blender.exe)|blender.exe", FileName = "blender.exe" };
         if (dialog.ShowDialog(this) != DialogResult.OK) return;
         blenderPath = dialog.FileName;
-        try { Directory.CreateDirectory(dataDir); File.WriteAllText(Path.Combine(dataDir, "settings.json"), JsonSerializer.Serialize(new Settings(blenderPath))); }
-        catch (Exception ex) { Log("จำตำแหน่ง Blender ไม่สำเร็จ: " + ex.Message); }
+        SaveSettings();
         UpdateEngineLabel(); Log("ใช้ Blender: " + blenderPath);
+    }
+
+    private void SelectZBrush()
+    {
+        if (Busy) return;
+        using var dialog = new OpenFileDialog { Title = "เลือก ZBrush.exe · Select ZBrush", Filter = "ZBrush (ZBrush.exe)|ZBrush.exe", FileName = "ZBrush.exe" };
+        if (dialog.ShowDialog(this) != DialogResult.OK) return;
+        zbrushPath = dialog.FileName;
+        SaveSettings();
+        UpdateEngineLabel(); Log("พบ ZBrush: " + zbrushPath);
+    }
+
+    private void SaveSettings()
+    {
+        try
+        {
+            Directory.CreateDirectory(dataDir);
+            File.WriteAllText(Path.Combine(dataDir, "settings.json"), JsonSerializer.Serialize(new Settings(blenderPath, zbrushPath)));
+        }
+        catch (Exception ex) { Log("บันทึกการตั้งค่าไม่สำเร็จ: " + ex.Message); }
     }
     private void OpenInBlender()
     {
@@ -913,6 +953,41 @@ public sealed class MainForm : Form
             Process.Start(start);
         }
         catch (Exception ex) { ShowError("เปิด Blender ไม่สำเร็จ", ex); }
+    }
+
+    private async Task OpenInZBrushAsync()
+    {
+        if (Busy) return;
+        var objectName = viewport.SelectedObject ?? objectActions.TargetObject;
+        if (string.IsNullOrWhiteSpace(objectName))
+        {
+            status.Text = "เลือกวัตถุก่อนส่งไป ZBrush · Select an object first";
+            return;
+        }
+        var executable = zbrushPath != null && File.Exists(zbrushPath) ? zbrushPath : ZBrushService.FindZBrush();
+        if (executable == null)
+        {
+            MessageBox.Show(this, "ไม่พบ ZBrush.exe ในเครื่อง\nInstall ZBrush or set MITI_ZBRUSH to its executable path.",
+                "ZBrush", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            return;
+        }
+        if (lastBuild == null || lastBuiltSource != editor.Code)
+            if (!await BuildModelAsync()) return;
+        var job = Path.Combine(dataDir, "ZBrushExchange", DateTime.Now.ToString("yyyyMMdd-HHmmss") + "-" + Guid.NewGuid().ToString("N")[..8]);
+        Directory.CreateDirectory(job);
+        var obj = Path.Combine(job, "selected.obj");
+        var cts = BeginOperation("กำลังส่งวัตถุไป ZBrush… · Opening in ZBrush…");
+        try
+        {
+            await blender.ExportSelectionObjAsync(blenderPath!, lastBuild!.ScenePath, objectName, obj,
+                new Progress<string>(Log), cts.Token);
+            await zbrush.OpenObjAsync(executable, obj, job, new Progress<string>(Log), cts.Token);
+            status.Text = "เปิดวัตถุใน ZBrush แล้ว · Opened in ZBrush";
+            Log("ZBrush native API imported: " + obj);
+        }
+        catch (OperationCanceledException) { status.Text = "ยกเลิกการเปิด ZBrush · Cancelled"; }
+        catch (Exception ex) { ShowError("เปิด ZBrush ไม่สำเร็จ · ZBrush failed", ex); }
+        finally { EndOperation(cts); }
     }
     private void SaveScreenshot()
     {
@@ -958,14 +1033,25 @@ public sealed class MainForm : Form
             "Decimation Master → Decimate\n" +
             "Masking → MitiMask vertex group + Feather/Region\n" +
             "Deformation → Taper/Twist/Bend/Stretch\n" +
-            "Polypaint → Material colour (per object)\n" +
-            "GoZ → Export GLB/OBJ/BLEND/STL\n\n" +
-            "ZBrush ไม่ได้ติดตั้งในเครื่องนี้ จึงไม่มี REA ของ ZBrush\n" +
-            "ZBrush is not installed here, so no ZBrush REA evidence exists.\n" +
-            "ฟังก์ชันเหล่านี้เป็นการทำงานแบบ ZBrush-style บน Blender ไม่ใช่การเลียนแบบทุกฟังก์ชัน",
+            "Insert Mesh → Insert primitive and weld into the SubTool\n" +
+            "Clip Curve → Plane bisect + cap the opening\n" +
+            "Transpose → Proportional move with falloff radius\n" +
+            "Project All → Shrinkwrap onto another mesh\n" +
+            "Surface Noise → Procedural displacement\n" +
+            "Sculpt Layers → Shape keys with intensity\n" +
+            "ZSpheres → Blended metaball base mesh\n" +
+            "FiberMesh → Real curve strands\n" +
+            "NanoMesh → Scattered instances\n" +
+            "ArrayMesh → Repeated copies\n" +
+            "PolyPaint → Vertex colour attribute\n" +
+            "SubTool Boolean → Union / Subtract / Intersect\n" +
+            "Mesh Exchange → Import OBJ/GLB/STL/FBX + Export GLB/OBJ/BLEND/STL\n\n" +
+            "REA ตรวจไฟล์ ZBrush 2027 และ Python API ที่ติดตั้งในเครื่องแล้ว\n" +
+            "Open selected in ZBrush ส่ง OBJ ผ่าน Python API ของ ZBrush จริง\n" +
+            "เครื่องมือ ZBrush-style ข้างบนยังเป็นการเลียนแบบบน Blender",
             "ZBrush-style tools · ตารางเทียบ", MessageBoxButtons.OK, MessageBoxIcon.Information);
     }
-    private sealed record Settings(string? BlenderPath);
+    private sealed record Settings(string? BlenderPath, string? ZBrushPath = null);
     private sealed record ProjectFile(int Version, string Source);
 
     private const string DefaultCode = """
@@ -976,13 +1062,13 @@ public sealed class MainForm : Form
         """;
 
     private const string HelpText = """
-มิติ สตูดิโอ 0.9 — สตูดิโอโมเดล 3 มิติแบบ GUI
-Miti Studio 0.9 — bilingual GUI 3D studio
+มิติ สตูดิโอ 0.10 — สตูดิโอโมเดล 3 มิติแบบ GUI
+Miti Studio 0.10 — bilingual GUI 3D studio
 
 เริ่มใช้งาน
 1. เปิดโปรแกรม จะสร้างฉากเริ่มต้นให้อัตโนมัติถ้าพบ Blender
 2. เลือกวัตถุจาก SubTools ด้านซ้าย หรือคลิกบนโมเดลใน viewport
-3. ใช้แผงเครื่องมือด้านขวา: Create, Functions, Sculpt, Topology, Mask, Material
+3. ใช้แผงเครื่องมือด้านขวา: Create, Functions, Sculpt, Topology, Mask, Material, ZBrush
 4. กด Build (F5) เมื่อต้องการบันทึกการเปลี่ยนแปลง
 5. Export เพื่อบันทึก GLB, BLEND, OBJ หรือ STL
 
@@ -1011,8 +1097,18 @@ Material · วัสดุ
 ชื่อวัสดุ สีหลัก Metallic Roughness Emission และวัสดุสำเร็จรูป 5 แบบ
 
 Functions · ฟังก์ชัน
-ค้นหาคำสั่ง Blender กว่า 2,400 รายการ ปรับพารามิเตอร์แล้วใช้กับวัตถุ
+ค้นหาคำสั่ง Blender กว่า 22,600 รายการ ปรับพารามิเตอร์แล้วใช้กับวัตถุ
 คลิกขวาที่โมเดลเพื่อเปิดรายการคำสั่งแบบเร็ว
+
+ZBrush · เอนจิน
+Insert Mesh, Clip Curve, Transpose, Project All, Surface Noise,
+Sculpt Layers, ZSpheres, FiberMesh, NanoMesh, ArrayMesh,
+PolyPaint, SubTool Boolean, Mesh Import และ Open in ZBrush
+
+ฟังก์ชันทั้งหมดทำงานด้วย engine ของ Blender จริง (mesh, modifier, shape key,
+vertex colour, curve) จึงบันทึกใน .blend และส่งออก GLB/OBJ/STL ได้
+เครื่องมือ ZBrush-style เหล่านี้เป็นการเลียนแบบพฤติกรรมบน Blender
+เครื่องมือเหล่านี้ยังเป็น emulation บน Blender; ปุ่ม Open in ZBrush ใช้ Python API ของ ZBrush จริง
 
 SubTools · วัตถุย่อย
 ทำสำเนา เปลี่ยนชื่อ หรือลบวัตถุ พร้อมดูจำนวนจุดยอดและสามเหลี่ยม
@@ -1031,7 +1127,8 @@ Ctrl+N ฉากใหม่ • Ctrl+O เปิดโปรเจกต์ •
 
 REA
 ตรวจ Blender executable/resources และดึง API catalog ด้วย runtime introspection
-ZBrush ไม่ได้ติดตั้งในเครื่องนี้ จึงยังไม่มี REA ของ ZBrush และแอปไม่ อ้างว่ามี
-ฟังก์ชัน ZBrush ครบทั้งโปรแกรม — เครื่องมือที่เห็นคือ ZBrush-style บน Blender
+REA ตรวจ ZBrush 2027 executable/resources แล้ว และอ่าน Python API ที่ติดตั้งในเครื่อง
+ZBrush native API ยังต้องอาศัยการติดตั้งและใบรับรองระบบที่ใช้งานได้
+เครื่องมือ ZBrush-style ที่เหลือทำงานบน Blender
 """;
 }

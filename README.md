@@ -2,13 +2,21 @@
 
 แอป **Windows Forms** สองภาษา (ไทย/อังกฤษ) สำหรับสร้างโมเดล 3 มิติด้วย Blender ที่ติดตั้งในเครื่อง ใช้ผ่าน GUI เป็นหลัก และยังเปิดโหมดสคริปต์ได้เมื่อต้องการ
 
+## รุ่น 0.10 — รวมเอนจิน Blender + ZBrush-style
+
+เพิ่มแท็บ **ZBrush · เอนจิน** ที่รวมงานแบบ ZBrush ไว้ 13 คำสั่ง ซึ่งทำงานบน engine จริงของ Blender ทั้งหมด: Insert Mesh, Clip Curve, Transpose, Project All, Surface Noise, Sculpt Layers (shape key), ZSpheres (metaball), FiberMesh (curve), NanoMesh, ArrayMesh, PolyPaint (vertex colour), SubTool Boolean และ Mesh Import (OBJ/GLB/STL/FBX) ทุกคำสั่งบันทึกเป็นขั้นตอนในโปรเจกต์และ rebuild ด้วย Blender อัตโนมัติ ดู [เอนจิน ZBrush-style](docs/ZBrush-Engine.md)
+
+**Blender + ZBrush:** ปุ่ม **Open in ZBrush · เปิดวัตถุใน ZBrush** ส่งออกวัตถุที่เลือกเป็น OBJ ด้วย Blender แล้วเรียก Python API ของ ZBrush ที่ติดตั้งจริงเพื่อ import เข้าสู่ ZBrush เลือกตำแหน่ง `ZBrush.exe` ได้ที่ Settings → ZBrush Path หลังปั้นให้ export OBJ จาก ZBrush แล้วกด **Import ZBrush OBJ · นำโมเดลกลับ** เพื่อเพิ่มเข้า Blender ส่วนเครื่องมือ ZBrush-style ในแท็บยังคำนวณด้วย Blender อยู่ การส่งผ่าน OBJ ไม่ใช่ GoZ และยังไม่ซิงก์สองทางอัตโนมัติ
+
+**REA:** ตรวจ `ZBrush.exe` 2027 ด้วย REA (PE resources, SHA-256) และตรวจ Python API ที่ติดมากับโปรแกรม ดู [เอนจิน ZBrush](docs/ZBrush-Engine.md) แก้ certificate chain ของไฟล์โปรแกรมแล้ว แต่การทดสอบยังค้างที่ SplashScreen ก่อน Python API; log ของ Maxon ระบุว่าไม่มี license ที่เปิดใช้งานอัตโนมัติ จึงยังยืนยันการ import ใน ZBrush จริงไม่ได้
+
 ## รุ่น 0.9 — GUI สองภาษา + คลังฟังก์ชันรวม
 
 หน้าต่างหลักเป็น GUI ทั้งหมด: แท็บ **Create · สร้าง**, **Functions · ฟังก์ชัน**, **Sculpt · ปั้น**, **Topology · โครงสร้าง**, **Mask · มาสก์** และ **Material · วัสดุ** ทุกเมนู ปุ่ม และสถานะแสดงอังกฤษนำหน้าภาษาไทย โหมดสคริปต์ปิดไว้เป็นค่าเริ่มต้น เปิดได้ที่ **View → Script Mode**
 
-ปุ่ม **Functions · ฟังก์ชัน** บนแถบด้านบน (หรือ **Model → Function Library**, Ctrl+Shift+F) เปิดคลังรวม **22,754 รายการ**: Blender API 22,689 รายการจาก REA + runtime introspection และเครื่องมือ ZBrush-style 65 รายการที่แมปกับ Blender จริง ค้นหาสองภาษา กรองตามแหล่ง และกด **Open tool** หรือ **Use with object** เพื่อใช้งานได้ทันที ดู [คลังฟังก์ชันรวม](docs/Function-Library.md)
+ปุ่ม **Functions · ฟังก์ชัน** บนแถบด้านบน (หรือ **Model → Function Library**, Ctrl+Shift+F) เปิดคลังรวม **22,761 รายการ**: Blender API 22,689 รายการจาก REA + runtime introspection และเครื่องมือ ZBrush-style 72 รายการที่แมปกับ Blender จริง ค้นหาสองภาษา กรองตามแหล่ง และกด **Open tool** หรือ **Use with object** เพื่อใช้งานได้ทันที ดู [คลังฟังก์ชันรวม](docs/Function-Library.md)
 
-ZBrush ไม่ได้ติดตั้งในเครื่องนี้ จึงยังไม่มีหลักฐาน REA ของ ZBrush รายการ ZBrush-style เป็นการแมปงานออกแบบ ไม่ใช่การถอดโค้ดจาก ZBrush
+รายการ ZBrush-style เป็นการแมปงานออกแบบและเขียนใหม่บน Blender ไม่ใช่การถอดโค้ดของ ZBrush
 
 หน้าต่างรุ่น 0.7 ใช้ธีมมืดเดียวกันทั้งแถบเครื่องมือ แท็บ และแผงควบคุม พร้อมเพิ่มพื้นที่มุมมอง 3 มิติและขยายช่องพารามิเตอร์ ชื่อพารามิเตอร์และตัวเลือกรูปทรงแสดงภาษาอังกฤษของ Blender ก่อนภาษาไทย เช่น `Number of Cuts / จำนวนครั้งที่แบ่ง` และ `Location / ตำแหน่ง`
 
@@ -47,7 +55,7 @@ ZBrush ไม่ได้ติดตั้งในเครื่องนี�
 
 ## เปิดใช้งาน
 
-1. เปิด `dist/MitiStudio-0.2/MitiStudio.exe` หรือแตก ZIP ทั้งโฟลเดอร์แล้วเปิด `MitiStudio.exe`
+1. เปิด `dist/MitiStudio-0.10.0/MitiStudio.exe` หรือแตก ZIP ทั้งโฟลเดอร์แล้วเปิด `MitiStudio.exe`
 2. แอปค้นหา Blender ให้อัตโนมัติ หากไม่พบ เลือก **ตั้งค่า → ตำแหน่ง Blender** แล้วเลือก `blender.exe`
 3. เริ่มจากตัวอย่างบ้าน หุ่นยนต์ เมือง หรือ Blender Python ทางซ้าย
 4. แก้โค้ดและกด **F5 / สร้างโมเดล**
@@ -95,7 +103,7 @@ ZBrush ไม่ได้ติดตั้งในเครื่องนี�
 
 ไม่มีแพ็กเกจ NuGet ภายนอก `NuGet.Config` ปิดแหล่งดาวน์โหลด จึง build แบบ offline ได้เมื่อมี SDK และ targeting packs ครบ
 
-ใช้ `./build.ps1 -Publish` เพื่อสร้างแพ็กเกจ 0.2 ในเครื่องนี้ สคริปต์รองรับตัวเรียก SDK ภายในโปรเจกต์ที่เตรียมไว้ระหว่างพัฒนา หากไฟล์ `dotnet.exe` ของระบบยังไม่พร้อมใช้งาน
+ใช้ `./build.ps1 -Publish` เพื่อสร้างแพ็กเกจตาม Version ในโปรเจกต์ สคริปต์รองรับตัวเรียก SDK ภายในโปรเจกต์ที่เตรียมไว้ระหว่างพัฒนา หากไฟล์ `dotnet.exe` ของระบบยังไม่พร้อมใช้งาน
 
 ```powershell
 dotnet restore ThaiModelStudio.csproj

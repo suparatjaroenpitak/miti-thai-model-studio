@@ -9,8 +9,8 @@ The app merges every function it knows into one searchable window. Open it with 
 | แหล่ง / Source | จำนวน / Entries | ที่มา / Origin |
 | --- | --- | --- |
 | Blender API | 22,689 | REA ของ `blender.exe` + runtime introspection ใน Blender 5.2.2 LTS |
-| ZBrush-style | 65 | แมปงานแบบ ZBrush เข้ากับเครื่องมือที่แอปทำจริง |
-| รวม / Total | 22,754 | แสดงในตารางเดียว |
+| ZBrush-style | 72 | แมปงานแบบ ZBrush เข้ากับเครื่องมือที่แอปทำจริง (รวมเอนจิน 13 คำสั่ง) |
+| รวม / Total | 22,761 | แสดงในตารางเดียว |
 
 ## วิธีใช้ / How to use
 
@@ -25,7 +25,7 @@ The ZBrush column shows the honest status of each tool: `ใช้งานผ�
 ## REA ครอบคลุมอะไร / What REA covers
 
 - **Blender:** อ่านไฟล์ `blender.exe` ด้วย REA `inspect-pe-resources` เก็บ hash และ resource evidence แล้วดึง API catalog จาก process `--background --factory-startup` ดู [Blender-REA.md](Blender-REA.md)
-- **ZBrush:** เครื่องนี้ไม่ได้ติดตั้ง ZBrush จึงไม่มีไฟล์ให้ตรวจ REA รายการ ZBrush-style ทั้ง 65 รายการมาจากการแมปงานออกแบบ (SubTool, Brush, DynaMesh, ZRemesher, Mask, PolyPaint) เข้ากับ Blender operator และแผง GUI ของแอป ไม่ใช่การถอดโค้ดจาก ZBrush
+- **ZBrush:** ตรวจ ZBrush 2027 executable/resources ด้วย REA และอ่าน Python API ที่ติดมากับโปรแกรมแล้ว รายการ ZBrush-style ทั้ง 72 รายการมาจากการแมปงานออกแบบ (SubTool, Brush, DynaMesh, ZRemesher, Mask, PolyPaint, ZSpheres, FiberMesh, NanoMesh, ArrayMesh, Sculpt Layers, Mesh Exchange) เข้ากับ Blender operator และแผง GUI ของแอป ไม่ใช่การถอดโค้ดจาก ZBrush ปุ่ม Open in ZBrush เป็นทางเชื่อม native แยกต่างหาก ดู [เอนจิน ZBrush-style](ZBrush-Engine.md)
 
 REA ช่วยยืนยันตัวไฟล์และรายการ API ที่มีจริง แต่ไม่ได้ decompile modeling kernel ของ Blender และไม่ได้ยืนยันว่าทุกฟังก์ชันทำงานได้ในทุกบริบท รายการที่เป็น Blender API จึงแสดงรหัสจริงเพื่อให้ตรวจต่อได้ ส่วนคำสั่งที่ต้องมีบริบทเฉพาะจะแจ้งเตือนเมื่อใช้งาน
 

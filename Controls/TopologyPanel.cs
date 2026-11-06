@@ -177,7 +177,7 @@ public sealed class TopologyPanel : UserControl
     }
     private static NumericUpDown Number(decimal value, decimal minimum, decimal maximum, int decimals)
     {
-        var input = new NumericUpDown { Width = 236, Value = value, Minimum = minimum, Maximum = maximum,
+        var input = new NumericUpDown { Width = 236, Minimum = minimum, Maximum = maximum, Value = value,
             DecimalPlaces = decimals, Increment = decimals == 0 ? 1 : 0.01m,
             BackColor = Theme.Raised, ForeColor = Theme.Text };
         Theme.UseDarkControls(input); return input;

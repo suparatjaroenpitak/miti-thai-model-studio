@@ -15,6 +15,7 @@ import thai_model
 import thai_api
 import thai_workspace
 import mesh_mask
+import zbrush_engine
 from sculpt_brush import sculpt_stroke
 
 PREVIEW_TRIANGLES = 60000
@@ -100,7 +101,7 @@ def write_preview(path):
     log('Preview: %d objects / %d source triangles%s' % (len(objects), triangle_total, ' (simplified preview)' if simplified else ''))
 
 
-def export_file(destination, kind):
+def export_file(destination, kind, selected_object=None):
     destination = Path(destination).resolve()
     destination.parent.mkdir(parents=True, exist_ok=True)
     if kind == 'blend':
@@ -113,8 +114,11 @@ def export_file(destination, kind):
     elif kind == 'glb':
         bpy.ops.export_scene.gltf(filepath=str(destination), export_format='GLB', use_visible=True, export_apply=True)
     elif kind == 'obj':
+        if selected_object and (selected_object not in bpy.data.objects or bpy.data.objects[selected_object].type != 'MESH'):
+            raise ValueError('Selected mesh not found: ' + selected_object)
         for obj in bpy.context.scene.objects:
-            obj.select_set(obj.type == 'MESH' and not obj.hide_viewport and not obj.hide_render)
+            obj.select_set(obj.type == 'MESH' and not obj.hide_viewport and not obj.hide_render and
+                           (selected_object is None or obj.name == selected_object))
         bpy.ops.wm.obj_export(filepath=str(destination), export_selected_objects=True, apply_modifiers=True)
     elif kind == 'stl':
         for obj in bpy.context.scene.objects:
@@ -133,11 +137,12 @@ def main():
     parser.add_argument('--output')
     parser.add_argument('--export')
     parser.add_argument('--format', choices=['blend', 'glb', 'obj', 'stl'])
+    parser.add_argument('--selected-object')
     parser.add_argument('--window-context', action='store_true')
     parser.add_argument('--preview-only', action='store_true')
     args = parser.parse_args(sys.argv[sys.argv.index('--') + 1:] if '--' in sys.argv else [])
     if args.export:
-        export_file(args.export, args.format)
+        export_file(args.export, args.format, args.selected_object)
         return
     if not args.source or not args.output:
         parser.error('--source and --output are required for building')
@@ -164,6 +169,7 @@ def main():
     namespace['_miti_mask_clear'] = mesh_mask.mask_clear
     namespace['_miti_mask_invert'] = mesh_mask.mask_invert
     namespace['_miti_mask_feather'] = mesh_mask.mask_feather
+    namespace['zbrush_engine'] = zbrush_engine
     log('Building model...')
     exec(compile(source, str(source_path), 'exec'), namespace, namespace)
     bpy.context.view_layer.update()
