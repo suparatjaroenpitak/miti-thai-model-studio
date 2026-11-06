@@ -30,6 +30,7 @@ public sealed class MainForm : Form
     private readonly Button stop;
     private readonly Button export;
     private readonly BlenderService blender = new();
+    private readonly Stack<(string After, string Before)> sculptHistory = new();
     private readonly string dataDir = Path.Combine(AppContext.BaseDirectory, "UserData");
     private readonly List<ToolStripMenuItem> idleItems = [];
     private CancellationTokenSource? operation;
@@ -62,9 +63,9 @@ public sealed class MainForm : Form
         objectMenu.Items.Add(objectMenuSearch);
         objectMenuSearch.TextChanged += (_, _) => RefreshObjectMenu();
         FormClosed += (_, _) => objectMenu.Dispose();
-        run = Theme.Button("▶  สร้างโมเดล  F5", async (_, _) => await BuildModelAsync(), true);
-        stop = Theme.Button("■  หยุด", (_, _) => operation?.Cancel()); stop.Enabled = false;
-        export = Theme.Button("ส่งออกโมเดล ↗", async (_, _) => await ExportModelAsync());
+        run = Theme.Button("▶  Build · สร้าง  F5", async (_, _) => await BuildModelAsync(), true);
+        stop = Theme.Button("■  Stop · หยุด", (_, _) => operation?.Cancel()); stop.Enabled = false;
+        export = Theme.Button("Export · ส่งออก ↗", async (_, _) => await ExportModelAsync());
 
         var menu = BuildMenu();
         var header = BuildHeader();
@@ -102,16 +103,22 @@ public sealed class MainForm : Form
         {
             viewport.SculptEnabled = sculptTools.Active;
             viewport.SculptRadius = sculptTools.Radius;
+            viewport.SculptFocalShift = sculptTools.FocalShift;
+            viewport.SculptBrushLabel = sculptTools.BrushLabel;
             status.Text = sculptTools.Active ? "โหมดแปรงปั้นพร้อมใช้งาน — ลากเมาส์ซ้ายบนผิวโมเดล" : "ปิดโหมดแปรงปั้นแล้ว";
         };
+        sculptTools.UndoRequested += async (_, _) => await UndoSculptAsync();
         viewport.SculptStrokeCompleted += async (_, stroke) =>
         {
             if (Busy) return;
             try
             {
-                editor.AppendSnippet(sculptTools.GenerateSnippet(stroke));
+                var previous = editor.Code;
+                editor.AppendSnippet(sculptTools.GenerateSnippet(stroke), focus: false);
+                sculptHistory.Push((editor.Code, previous));
                 status.Text = "กำลังบันทึกรอยแปรงด้วย Blender…";
                 await BuildModelAsync();
+                if (!IsDisposed) viewport.Focus();
             }
             catch (Exception ex) { ShowError("ปั้นโมเดลไม่สำเร็จ", ex); }
         };
@@ -191,48 +198,60 @@ public sealed class MainForm : Form
     {
         var menu = new MenuStrip { Dock = DockStyle.Top, BackColor = Theme.Panel, ForeColor = Theme.Text,
             Padding = new Padding(16, 6, 0, 6), Font = new Font("Leelawadee UI", 10) };
-        var file = new ToolStripMenuItem("ไฟล์");
-        Add(file, "สร้างไฟล์ใหม่", (_, _) => NewFile(), Keys.Control | Keys.N);
-        Add(file, "เปิดโค้ด…", (_, _) => OpenCode(), Keys.Control | Keys.O);
-        Add(file, "บันทึกโค้ด", (_, _) => SaveCode(), Keys.Control | Keys.S);
-        Add(file, "บันทึกโค้ดเป็น…", (_, _) => SaveCode(true), Keys.Control | Keys.Shift | Keys.S);
+        var file = new ToolStripMenuItem("File · ไฟล์");
+        Add(file, "New · สร้างไฟล์ใหม่", (_, _) => NewFile(), Keys.Control | Keys.N);
+        Add(file, "Open Code · เปิดโค้ด…", (_, _) => OpenCode(), Keys.Control | Keys.O);
+        Add(file, "Save Code · บันทึกโค้ด", (_, _) => SaveCode(), Keys.Control | Keys.S);
+        Add(file, "Save As · บันทึกเป็น…", (_, _) => SaveCode(true), Keys.Control | Keys.Shift | Keys.S);
         file.DropDownItems.Add(new ToolStripSeparator());
-        Add(file, "ส่งออกโมเดล…", async (_, _) => await ExportModelAsync(), Keys.Control | Keys.E);
-        Add(file, "บันทึกภาพมุมมอง…", (_, _) => SaveScreenshot());
+        Add(file, "Export Model · ส่งออกโมเดล…", async (_, _) => await ExportModelAsync(), Keys.Control | Keys.E);
+        Add(file, "Save View · บันทึกภาพมุมมอง…", (_, _) => SaveScreenshot());
         file.DropDownItems.Add(new ToolStripSeparator());
-        Add(file, "ออก", (_, _) => Close(), idleOnly: false);
-        var model = new ToolStripMenuItem("โมเดล");
-        Add(model, "เพิ่มรูปทรง…", (_, _) => { modelToolTabs.SelectedIndex = 1; shapeTools.ShowCreateTab(); });
-        Add(model, "ย้าย หมุน สเกลวัตถุที่เลือก…", (_, _) => { modelToolTabs.SelectedIndex = 1; shapeTools.ShowTransformTab(); });
-        Add(model, "คลังฟังก์ชัน Blender ภาษาไทย…", (_, _) => ShowApiCatalog(), Keys.Control | Keys.Space);
-        Add(model, "เมนู Blender ทั้งหมด → โค้ดไทย…", (_, _) => ShowWorkbench(), Keys.Control | Keys.Shift | Keys.Space);
-        Add(model, "สร้างจากโค้ด", async (_, _) => await BuildModelAsync(), Keys.F5);
-        Add(model, "เปิดโมเดลใน Blender", (_, _) => OpenInBlender());
-        var windowContext = new ToolStripMenuItem("ใช้บริบทหน้าต่าง Blender ขณะรัน") { CheckOnClick = true };
+        Add(file, "Exit · ออก", (_, _) => Close(), idleOnly: false);
+        var model = new ToolStripMenuItem("Model · โมเดล");
+        Add(model, "Add Shape · เพิ่มรูปทรง…", (_, _) => { modelToolTabs.SelectedIndex = 1; shapeTools.ShowCreateTab(); });
+        Add(model, "Transform · ย้าย หมุน สเกล…", (_, _) => { modelToolTabs.SelectedIndex = 1; shapeTools.ShowTransformTab(); });
+        Add(model, "Blender API · คลังฟังก์ชัน…", (_, _) => ShowApiCatalog(), Keys.Control | Keys.Space);
+        Add(model, "Blender Menus · เมนูทั้งหมด…", (_, _) => ShowWorkbench(), Keys.Control | Keys.Shift | Keys.Space);
+        Add(model, "Build from Code · สร้างจากโค้ด", async (_, _) => await BuildModelAsync(), Keys.F5);
+        Add(model, "Open in Blender · เปิดใน Blender", (_, _) => OpenInBlender());
+        var windowContext = new ToolStripMenuItem("Window Context · ใช้หน้าต่าง Blender ขณะรัน") { CheckOnClick = true };
         windowContext.CheckedChanged += (_, _) =>
         {
             blender.UseWindowContext = windowContext.Checked;
             status.Text = windowContext.Checked ? "ใช้หน้าต่าง Blender แยกขณะรัน — รองรับคำสั่งที่ต้องใช้บริบทมุมมอง" : "ใช้ Blender แบบเบื้องหลัง";
         };
         model.DropDownItems.Add(windowContext); idleItems.Add(windowContext);
-        var view = new ToolStripMenuItem("มุมมอง");
-        Add(view, "จัดโมเดลให้พอดี", (_, _) => viewport.FitScene());
-        Add(view, "มองเฉียง", (_, _) => viewport.SetView("isometric"));
-        Add(view, "มองด้านหน้า", (_, _) => viewport.SetView("front"));
-        Add(view, "มองด้านบน", (_, _) => viewport.SetView("top"));
-        var grid = new ToolStripMenuItem("แสดงเส้นตาราง") { Checked = true, CheckOnClick = true };
+        var sculpt = new ToolStripMenuItem("Sculpt · ปั้น");
+        Add(sculpt, "Sculpt Mode · เปิดโหมดปั้น", (_, _) => OpenSculpt());
+        var brushes = new ToolStripMenuItem("Brush · หัวแปรง");
+        foreach (var (id, label) in new[] { ("STANDARD", "Standard · มาตรฐาน"), ("CLAY", "Clay · เติมดิน"),
+            ("MOVE", "Move · ดึงผิว"), ("SMOOTH", "Smooth · เกลี่ยผิว"), ("FLATTEN", "Flatten · ปรับแบน"),
+            ("PINCH", "Pinch · บีบผิว"), ("INFLATE", "Inflate · พองผิว"), ("CREASE", "Crease · เซาะร่อง") })
+            Add(brushes, label, (_, _) => OpenSculpt(id));
+        sculpt.DropDownItems.Add(brushes);
+        Add(sculpt, "ZAdd · เพิ่มผิว", (_, _) => { OpenSculpt(); sculptTools.SetSubtract(false); });
+        Add(sculpt, "ZSub · ลดผิว", (_, _) => { OpenSculpt(); sculptTools.SetSubtract(true); });
+        Add(sculpt, "Symmetry X · สมมาตร X", (_, _) => { OpenSculpt(); sculptTools.ToggleSymmetryX(); });
+        Add(sculpt, "Undo Stroke · ย้อนรอยล่าสุด", async (_, _) => await UndoSculptAsync());
+        var view = new ToolStripMenuItem("View · มุมมอง");
+        Add(view, "Frame All · จัดให้พอดี", (_, _) => viewport.FitScene());
+        Add(view, "Isometric · มองเฉียง", (_, _) => viewport.SetView("isometric"));
+        Add(view, "Front · มองด้านหน้า", (_, _) => viewport.SetView("front"));
+        Add(view, "Top · มองด้านบน", (_, _) => viewport.SetView("top"));
+        var grid = new ToolStripMenuItem("Grid · เส้นตาราง") { Checked = true, CheckOnClick = true };
         grid.CheckedChanged += (_, _) => { viewport.ShowGrid = grid.Checked; viewport.Invalidate(); };
-        var wire = new ToolStripMenuItem("แสดงโครงเส้น") { CheckOnClick = true };
+        var wire = new ToolStripMenuItem("Wireframe · โครงเส้น") { CheckOnClick = true };
         wire.CheckedChanged += (_, _) => { viewport.Wireframe = wire.Checked; viewport.Invalidate(); };
         view.DropDownItems.AddRange([new ToolStripSeparator(), grid, wire]);
-        var settings = new ToolStripMenuItem("ตั้งค่า");
-        Add(settings, "ตำแหน่ง Blender…", (_, _) => SelectBlender());
-        var help = new ToolStripMenuItem("คู่มือ");
-        Add(help, "คำสั่งและวิธีใช้", (_, _) => ShowHelp(), Keys.F1, false);
-        Add(help, "เกี่ยวกับ มิติ สตูดิโอ", (_, _) => MessageBox.Show(this,
-            "มิติ สตูดิโอ 0.7.3\nสร้างรูปทรง 8 แบบและปรับตำแหน่ง หมุน สเกลด้วยแผงด้านขวา\n\nเปิดแท็บแปรงปั้นเพื่อลากบนผิวโมเดลใน viewport\nคลิกขวาที่โมเดลเพื่อค้นหาคำสั่ง หรือใช้แท็บ รูปทรง/แปลง\nCtrl+Space เปิดคลัง API Blender\n\nใช้ Blender จริงเป็นเอนจิน\nคำสั่งบางชนิดต้องเตรียมวัตถุ โหมด หรือหน้าต่างให้เหมาะสม",
+        var settings = new ToolStripMenuItem("Settings · ตั้งค่า");
+        Add(settings, "Blender Path · ตำแหน่ง Blender…", (_, _) => SelectBlender());
+        var help = new ToolStripMenuItem("Help · คู่มือ");
+        Add(help, "Guide · คำสั่งและวิธีใช้", (_, _) => ShowHelp(), Keys.F1, false);
+        Add(help, "About · เกี่ยวกับ มิติ สตูดิโอ", (_, _) => MessageBox.Show(this,
+            "มิติ สตูดิโอ 0.8.0\nสร้างรูปทรงและปั้นโมเดลด้วยแผงควบคุมอังกฤษ–ไทย\n\nSculpt มีหัวแปรง 8 แบบ ZAdd/ZSub Symmetry และ Undo Stroke\nลากบนผิวโมเดลใน viewport แล้ว Blender จะสร้างผลลัพธ์ใหม่\nCtrl+Space เปิดคลัง API Blender\n\nใช้ Blender จริงเป็นเอนจิน\nคำสั่งบางชนิดต้องเตรียมวัตถุ โหมด หรือหน้าต่างให้เหมาะสม",
             "เกี่ยวกับ", MessageBoxButtons.OK, MessageBoxIcon.Information), idleOnly: false);
-        menu.Items.AddRange([file, model, view, settings, help]);
+        menu.Items.AddRange([file, model, sculpt, view, settings, help]);
         return menu;
     }
 
@@ -247,10 +266,10 @@ public sealed class MainForm : Form
         var header = new Panel { Dock = DockStyle.Top, Height = 98, BackColor = Theme.Panel, Padding = new Padding(22, 14, 20, 12) };
         var brand = new FlowLayoutPanel { Dock = DockStyle.Left, Width = 390, FlowDirection = FlowDirection.TopDown, WrapContents = false };
         brand.Controls.Add(Theme.Label("◈  มิติ สตูดิโอ", 21, Theme.Text, true));
-        brand.Controls.Add(Theme.Label("สร้าง 3 มิติด้วยโค้ดและเครื่องมือภาษาไทย", 9.5f, Theme.Muted));
+        brand.Controls.Add(Theme.Label("3D Modeling · สร้างโมเดลด้วยโค้ดและแปรงปั้น", 9.5f, Theme.Muted));
         var actions = new FlowLayoutPanel { Dock = DockStyle.Right, AutoSize = true, FlowDirection = FlowDirection.LeftToRight, WrapContents = false, Padding = new Padding(0, 12, 0, 0) };
-        actions.Controls.Add(Theme.Button("เปิดโค้ด", (_, _) => OpenCode()));
-        actions.Controls.Add(Theme.Button("บันทึก", (_, _) => SaveCode()));
+        actions.Controls.Add(Theme.Button("Open · เปิด", (_, _) => OpenCode()));
+        actions.Controls.Add(Theme.Button("Save · บันทึก", (_, _) => SaveCode()));
         actions.Controls.Add(run); actions.Controls.Add(stop); actions.Controls.Add(export);
         header.Controls.Add(actions); header.Controls.Add(brand); return header;
     }
@@ -258,14 +277,14 @@ public sealed class MainForm : Form
     private Control BuildSidebar()
     {
         var panel = new Panel { Dock = DockStyle.Fill, BackColor = Theme.Panel, Padding = new Padding(14, 18, 14, 12) };
-        var title = Theme.Label("วัตถุในฉาก  ◇", 11, Theme.Text, true); title.Dock = DockStyle.Top; title.Height = 36; title.AutoSize = false;
+        var title = Theme.Label("Objects · วัตถุในฉาก  ◇", 11, Theme.Text, true); title.Dock = DockStyle.Top; title.Height = 36; title.AutoSize = false;
         var details = new Panel { Dock = DockStyle.Bottom, Height = 72, Padding = new Padding(6, 8, 0, 0) };
         objectDetails.Dock = DockStyle.Fill; details.Controls.Add(objectDetails);
         var examples = new FlowLayoutPanel { Dock = DockStyle.Bottom, Height = 278, FlowDirection = FlowDirection.TopDown, WrapContents = false, Padding = new Padding(0, 14, 0, 0) };
-        var apiButton = Theme.Button("คลัง Blender ภาษาไทย", (_, _) => ShowApiCatalog(), true);
+        var apiButton = Theme.Button("Blender API · คลัง", (_, _) => ShowApiCatalog(), true);
         apiButton.Width = 173; apiButton.Margin = new Padding(0, 0, 0, 12); examples.Controls.Add(apiButton);
-        examples.Controls.Add(Theme.Label("เริ่มจากตัวอย่าง", 10, Theme.Muted, true));
-        foreach (var entry in new[] { ("01_house.py", "⌂  บ้านหลังเล็ก"), ("02_robot.py", "▣  หุ่นยนต์"), ("03_city.py", "▥  เมืองจำลอง"), ("04_bpy.py", "◇  Blender Python") })
+        examples.Controls.Add(Theme.Label("Examples · ตัวอย่าง", 10, Theme.Muted, true));
+        foreach (var entry in new[] { ("01_house.py", "⌂  House · บ้าน"), ("02_robot.py", "▣  Robot · หุ่นยนต์"), ("03_city.py", "▥  City · เมือง"), ("04_bpy.py", "◇  Blender Python") })
         {
             var b = Theme.Button(entry.Item2, (_, _) => LoadExample(entry.Item1));
             b.Width = 173; b.TextAlign = ContentAlignment.MiddleLeft; b.Margin = new Padding(0, 3, 0, 3);
@@ -306,6 +325,15 @@ public sealed class MainForm : Form
         }
     }
 
+    private void OpenSculpt(string? mode = null)
+    {
+        if (Busy) return;
+        modelToolTabs.SelectedIndex = 2;
+        if (mode is not null) sculptTools.SetMode(mode);
+        sculptTools.SetActive(true);
+        viewport.Focus();
+    }
+
     private Control BuildViewport()
     {
         var p = new Panel { Dock = DockStyle.Fill, BackColor = Theme.Background };
@@ -322,9 +350,9 @@ public sealed class MainForm : Form
         var info = new Panel { Dock = DockStyle.Bottom, Height = 32, BackColor = Theme.Panel, Padding = new Padding(12, 6, 0, 0) };
         modelLabel.Dock = DockStyle.Fill; info.Controls.Add(modelLabel);
         modelToolTabs.TabPages.Clear();
-        var actionPage = new StudioTabPage("คำสั่ง");
-        var toolsPage = new StudioTabPage("รูปทรง/แปลง");
-        var sculptPage = new StudioTabPage("แปรงปั้น");
+        var actionPage = new StudioTabPage("Tools · คำสั่ง");
+        var toolsPage = new StudioTabPage("Obj · วัตถุ");
+        var sculptPage = new StudioTabPage("Sculpt · ปั้น");
         actionPage.Controls.Add(objectActions); toolsPage.Controls.Add(shapeTools); sculptPage.Controls.Add(sculptTools);
         modelToolTabs.TabPages.AddRange([actionPage, toolsPage, sculptPage]); modelToolTabs.SelectedIndex = 1;
         modelToolTabs.SelectedIndexChanged += (_, _) =>
@@ -352,16 +380,16 @@ public sealed class MainForm : Form
     {
         objectActions.SetQuery(objectMenuSearch.Text);
         while (objectMenu.Items.Count > 1) objectMenu.Items.RemoveAt(1);
-        var transformItem = new ToolStripMenuItem("ย้าย / หมุน / สเกลวัตถุนี้");
+        var transformItem = new ToolStripMenuItem("Transform · ย้าย / หมุน / สเกล");
         transformItem.Click += (_, _) => { modelToolTabs.SelectedIndex = 1; shapeTools.ShowTransformTab(); };
         objectMenu.Items.Add(transformItem);
-        var createItem = new ToolStripMenuItem("เพิ่มรูปทรงใหม่…");
+        var createItem = new ToolStripMenuItem("Add Shape · เพิ่มรูปทรงใหม่…");
         createItem.Click += (_, _) => { modelToolTabs.SelectedIndex = 1; shapeTools.ShowCreateTab(); };
         objectMenu.Items.Add(createItem);
         objectMenu.Items.Add(new ToolStripSeparator());
         foreach (var entry in objectActions.Matches.Take(8))
         {
-            var option = new ToolStripMenuItem(entry.DisplayName + "  ·  " + entry.Id);
+            var option = new ToolStripMenuItem(ApiCatalogService.BilingualName(entry.Name, entry.ThaiName) + "  ·  " + entry.Id);
             option.Click += (_, _) => objectActions.Choose(entry);
             objectMenu.Items.Add(option);
         }
@@ -419,7 +447,19 @@ public sealed class MainForm : Form
     private void SetCode(string code, string? path = null)
     {
         loading = true; editor.Code = code; loading = false;
+        sculptHistory.Clear();
         currentPath = path; dirty = false; UpdateTitle();
+    }
+
+    private async Task UndoSculptAsync()
+    {
+        if (Busy || sculptHistory.Count == 0) { status.Text = "ยังไม่มีรอยแปรงให้ย้อน"; return; }
+        var (after, before) = sculptHistory.Peek();
+        if (editor.Code != after) { status.Text = "โค้ดเปลี่ยนหลังปั้น กรุณาย้อนในตัวแก้ไขโค้ด"; return; }
+        sculptHistory.Pop(); editor.Code = before;
+        dirty = true; UpdateTitle();
+        await BuildModelAsync();
+        if (!IsDisposed) viewport.Focus();
     }
     private void UpdateTitle()
     {
@@ -673,6 +713,12 @@ public sealed class MainForm : Form
     private void OnShortcut(object? sender, KeyEventArgs e)
     {
         if (e.KeyCode == Keys.Escape && Busy) { operation?.Cancel(); e.SuppressKeyPress = true; }
+        if (!viewport.Focused || !sculptTools.Active || Busy) return;
+        if (e.Control && e.KeyCode == Keys.Z) { _ = UndoSculptAsync(); e.SuppressKeyPress = true; }
+        else if (e.KeyCode == Keys.X) { sculptTools.ToggleSymmetryX(); e.SuppressKeyPress = true; }
+        else if (e.KeyCode == Keys.B) { sculptTools.FocusBrush(); e.SuppressKeyPress = true; }
+        else if (e.KeyCode == Keys.OemOpenBrackets) { sculptTools.AdjustRadius(-1); e.SuppressKeyPress = true; }
+        else if (e.KeyCode == Keys.OemCloseBrackets) { sculptTools.AdjustRadius(1); e.SuppressKeyPress = true; }
     }
     private void OnClosing(object? sender, FormClosingEventArgs e)
     {
@@ -705,8 +751,10 @@ Ctrl+Space หรือปุ่ม คลัง Blender ภาษาไทย
 1. เลือกตัวอย่างด้านซ้าย หรือเขียน Python ของคุณ
 2. กด F5 / สร้างโมเดล แล้วรอ Blender ทำงาน
 3. ลากเมาส์ซ้ายเพื่อหมุน • ลากขวา/กลางเพื่อเลื่อน • หมุนล้อเพื่อซูม
-   แท็บแปรงปั้น: เลือก Draw, Inflate หรือ Smooth แล้วเปิดโหมดปั้น ลากซ้ายบนผิวโมเดล
-   ในโหมดแปรงใช้ Alt + ลากซ้ายเพื่อหมุนมุมมอง ปล่อยเมาส์เพื่อให้ Blender บันทึกรอยแปรง
+   แท็บ Sculpt · ปั้น: เลือก Standard, Clay, Move, Smooth, Flatten, Pinch, Inflate หรือ Crease
+   ปรับ Draw Size, Z Intensity, Focal Shift, ZAdd/ZSub และ Symmetry X/Y/Z แล้วลากซ้ายบนผิวโมเดล
+   Alt + ลากซ้ายเพื่อหมุน • Shift + ลากเพื่อ Smooth • X สลับ Symmetry X • [ ] ปรับขนาดแปรง
+   ปล่อยเมาส์เพื่อให้ Blender บันทึกรอยแปรง • Undo Stroke เพื่อย้อนรอยล่าสุด
 4. กดส่งออกโมเดล เลือก GLB, Blender, OBJ หรือ STL
 
 คำสั่งเริ่มต้น

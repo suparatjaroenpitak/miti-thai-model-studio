@@ -30,7 +30,9 @@ def _mirrored_samples(obj, inverse, samples, symmetry):
                 continue
             world_normal.normalize()
             path.append((world_center, world_normal))
-        if path and not any((path[0][0] - existing[0][0]).length_squared < 1e-10 for existing in paths):
+        if path and not any(len(path) == len(existing) and all(
+                (point[0] - other[0]).length_squared < 1e-10 for point, other in zip(path, existing))
+                for existing in paths):
             paths.append(path)
     return paths
 

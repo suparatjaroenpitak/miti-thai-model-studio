@@ -1,4 +1,5 @@
 using System.Reflection;
+using System.Numerics;
 using System.Text.Json;
 using ThaiModelStudio;
 using ThaiModelStudio.Controls;
@@ -45,7 +46,7 @@ internal static class Program
             image.Save(Path.Combine(output, "brush-panel.png"));
         }
         var snippet = controls.GenerateSnippet(stroke);
-        if (!snippet.Contains("_miti_sculpt_stroke") || !snippet.Contains("mode=\"DRAW\""))
+        if (!snippet.Contains("_miti_sculpt_stroke") || !snippet.Contains("mode=\"STANDARD\""))
             throw new Exception("Brush stroke was not written into source code");
         var afterPath = Task.Run(() => service.PreviewAsync(blender, source + snippet, output, CancellationToken.None)).GetAwaiter().GetResult();
         using var before = JsonDocument.Parse(File.ReadAllText(beforePath));
@@ -57,15 +58,27 @@ internal static class Program
             throw new Exception("Brush did not deform vertices");
         var built = Task.Run(() => service.BuildAsync(blender, source + snippet, output, null, CancellationToken.None)).GetAwaiter().GetResult();
         if (!File.Exists(built.ScenePath) || !File.Exists(built.GlbPath)) throw new Exception("Sculpted scene was not saved");
-        var brush = (ComboBox)typeof(SculptBrushPanel).GetField("brush", BindingFlags.NonPublic | BindingFlags.Instance)!.GetValue(controls)!;
-        for (var index = 1; index < brush.Items.Count; index++)
+        foreach (var mode in new[] { "CLAY", "INFLATE", "SMOOTH", "FLATTEN", "PINCH", "MOVE", "CREASE" })
         {
-            brush.SelectedIndex = index;
+            controls.SetMode(mode);
             var modePath = Task.Run(() => service.PreviewAsync(blender, source + snippet + controls.GenerateSnippet(stroke), output, CancellationToken.None)).GetAwaiter().GetResult();
             using var modeResult = JsonDocument.Parse(File.ReadAllText(modePath));
             if (modeResult.RootElement.GetProperty("objects")[0].GetProperty("vertices").GetArrayLength() == 0)
-                throw new Exception("Brush mode " + index + " produced no mesh");
+                throw new Exception("Brush mode " + mode + " produced no mesh");
         }
+        controls.SetMode("STANDARD"); controls.ToggleSymmetryX();
+        var symmetricStroke = new SculptStroke("BrushCube", [new SculptSample(new Vector3(0.7f, 0, 1), Vector3.UnitZ)]);
+        var symmetricPath = Task.Run(() => service.PreviewAsync(blender, source + controls.GenerateSnippet(symmetricStroke), output, CancellationToken.None)).GetAwaiter().GetResult();
+        using var symmetric = JsonDocument.Parse(File.ReadAllText(symmetricPath));
+        var symmetricVertices = symmetric.RootElement.GetProperty("objects")[0].GetProperty("vertices").EnumerateArray().ToArray();
+        if (!symmetricVertices.Any(v => v[0].GetDouble() > 0.1 && v[2].GetDouble() > 1.0001)
+            || !symmetricVertices.Any(v => v[0].GetDouble() < -0.1 && v[2].GetDouble() > 1.0001))
+            throw new Exception("X symmetry did not sculpt both sides");
+        controls.SetSubtract(true);
+        var subtractPath = Task.Run(() => service.PreviewAsync(blender, source + controls.GenerateSnippet(symmetricStroke), output, CancellationToken.None)).GetAwaiter().GetResult();
+        using var subtracted = JsonDocument.Parse(File.ReadAllText(subtractPath));
+        if (!subtracted.RootElement.GetProperty("objects")[0].GetProperty("vertices").EnumerateArray().Any(v => v[2].GetDouble() < 0.9999 && v[2].GetDouble() > 0.5))
+            throw new Exception("ZSub did not cut into the surface");
         using var main = new MainForm(); main.CreateControl();
         var integratedPanel = (SculptBrushPanel)typeof(MainForm).GetField("sculptTools", BindingFlags.NonPublic | BindingFlags.Instance)!.GetValue(main)!;
         var integratedViewport = (ModelViewport)typeof(MainForm).GetField("viewport", BindingFlags.NonPublic | BindingFlags.Instance)!.GetValue(main)!;

@@ -35,8 +35,8 @@ public sealed class ShapeTransformPanel : UserControl
     public ShapeTransformPanel()
     {
         BackColor = Theme.Panel;
-        var createPage = new StudioTabPage("สร้างรูปทรง");
-        var editPage = new StudioTabPage("ย้าย·หมุน·สเกล");
+        var createPage = new StudioTabPage("Create · สร้าง");
+        var editPage = new StudioTabPage("Edit · แก้ไข");
         tabs.TabPages.AddRange([createPage, editPage]); Controls.Add(tabs);
         Theme.UseDarkControls(shapes, shapeName);
         var create = MakeFlow(); createPage.Controls.Add(create);
@@ -54,7 +54,7 @@ public sealed class ShapeTransformPanel : UserControl
         AddLabel(create, "Name · ชื่อวัตถุ"); create.Controls.Add(shapeName); shapeName.Text = "กล่องใหม่";
         AddLabel(create, "Location X/Y/Z · ตำแหน่ง"); create.Controls.Add(createPosition);
         AddLabel(create, "Scale X/Y/Z · สเกล"); create.Controls.Add(createScale);
-        var createButton = Theme.Button("เพิ่มรูปทรงและสร้างโมเดล", (_, _) => ApplyCreate(), true);
+        var createButton = Theme.Button("Create · เพิ่มรูปทรง", (_, _) => ApplyCreate(), true);
         createButton.Width = 220; create.Controls.Add(createButton);
 
         var edit = MakeFlow(); editPage.Controls.Add(edit);
@@ -62,7 +62,7 @@ public sealed class ShapeTransformPanel : UserControl
         AddLabel(edit, "Location X/Y/Z · ตำแหน่ง"); edit.Controls.Add(position);
         AddLabel(edit, "Rotation X/Y/Z (°) · มุมหมุน"); edit.Controls.Add(rotation);
         AddLabel(edit, "Scale X/Y/Z · สเกล"); edit.Controls.Add(scale);
-        var applyButton = Theme.Button("ใช้กับวัตถุและสร้างใหม่", (_, _) => ApplyTransform(), true);
+        var applyButton = Theme.Button("Apply · ใช้กับวัตถุ", (_, _) => ApplyTransform(), true);
         applyButton.Width = 220; edit.Controls.Add(applyButton);
 
         liveLabel.AutoSize = false; liveLabel.Dock = DockStyle.Bottom; liveLabel.Height = 34; Controls.Add(liveLabel);

@@ -5,7 +5,7 @@ namespace ThaiModelStudio.Controls;
 public sealed class ApiCatalogForm : Form
 {
     private readonly Func<string?> blenderPath;
-    private readonly TextBox search = new() { PlaceholderText = "ค้นหาภาษาไทย ชื่อเดิม หรือรหัส API…", Dock = DockStyle.Fill };
+    private readonly TextBox search = new() { PlaceholderText = "Search · ค้นหาภาษาไทย อังกฤษ หรือรหัส API…", Dock = DockStyle.Fill };
     private readonly ComboBox kind = new() { DropDownStyle = ComboBoxStyle.DropDownList, Width = 140 };
     private readonly ComboBox category = new() { DropDownStyle = ComboBoxStyle.DropDownList, Width = 190 };
     private readonly DataGridView list = Grid(true);
@@ -27,12 +27,12 @@ public sealed class ApiCatalogForm : Form
     public ApiCatalogForm(Func<string?> getBlenderPath)
     {
         blenderPath = getBlenderPath;
-        Text = "คลังฟังก์ชัน Blender ภาษาไทย"; BackColor = Theme.Background; ForeColor = Theme.Text;
+        Text = "Blender API · คลังฟังก์ชัน Blender"; BackColor = Theme.Background; ForeColor = Theme.Text;
         Size = new Size(1370, 900); MinimumSize = new Size(1020, 700); StartPosition = FormStartPosition.CenterParent;
         Font = new Font("Leelawadee UI", 10); Padding = new Padding(14);
-        insert = Theme.Button("แทรกโค้ดที่เลือก", (_, _) => { if (selected == null) return; SelectedCode = code.Text + "\n"; DialogResult = DialogResult.OK; Close(); }, true);
+        insert = Theme.Button("Insert Code · แทรกโค้ด", (_, _) => { if (selected == null) return; SelectedCode = code.Text + "\n"; DialogResult = DialogResult.OK; Close(); }, true);
         insert.Enabled = false;
-        scan = Theme.Button("สแกน Blender ใหม่", async (_, _) => await ScanAsync());
+        scan = Theme.Button("Rescan · สแกน Blender", async (_, _) => await ScanAsync());
         var top = new TableLayoutPanel { Dock = DockStyle.Top, Height = 46, ColumnCount = 4, RowCount = 1 };
         top.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
         top.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 150)); top.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 200)); top.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 170));
@@ -42,13 +42,13 @@ public sealed class ApiCatalogForm : Form
         kind.Items.AddRange([new Filter("ทุกประเภท", ""), new Filter("คำสั่ง", "operator"), new Filter("เมธอด", "function"), new Filter("คุณสมบัติ", "property"), new Filter("ชนิดข้อมูล", "type"), new Filter("ฟังก์ชันโมดูล", "moduleFunction")]); kind.SelectedIndex = 0;
         category.Items.Add(new Filter("ทุกหมวด", "")); category.SelectedIndex = 0;
         var footer = new FlowLayoutPanel { Dock = DockStyle.Bottom, Height = 48, FlowDirection = FlowDirection.RightToLeft, Padding = new Padding(0, 6, 0, 0) };
-        footer.Controls.Add(insert); footer.Controls.Add(Theme.Button("ปิด", (_, _) => Close()));
+        footer.Controls.Add(insert); footer.Controls.Add(Theme.Button("Close · ปิด", (_, _) => Close()));
         var info = new Panel { Dock = DockStyle.Bottom, Height = 43, Padding = new Padding(0, 10, 0, 0) }; count.Dock = DockStyle.Fill; info.Controls.Add(count);
         var split = new SplitContainer { Dock = DockStyle.Fill, Size = new Size(1300, 650), SplitterDistance = 570, BackColor = Theme.Border, SplitterWidth = 5 };
-        list.Columns.Add("name", "ฟังก์ชัน / คุณสมบัติ"); list.Columns.Add("kind", "ประเภท"); list.Columns.Add("identity", "รหัสอ้างอิง");
+        list.Columns.Add("name", "Name · ชื่อ"); list.Columns.Add("kind", "Kind · ประเภท"); list.Columns.Add("identity", "API ID · รหัสอ้างอิง");
         list.Columns[0].FillWeight = 48; list.Columns[1].FillWeight = 17; list.Columns[2].FillWeight = 35;
         list.VirtualMode = true;
-        list.CellValueNeeded += (_, e) => { if (e.RowIndex >= visible.Count) return; var item = visible[e.RowIndex]; e.Value = e.ColumnIndex switch { 0 => item.DisplayName, 1 => item.KindThai, _ => item.Id }; };
+        list.CellValueNeeded += (_, e) => { if (e.RowIndex >= visible.Count) return; var item = visible[e.RowIndex]; e.Value = e.ColumnIndex switch { 0 => ApiCatalogService.BilingualName(item.Name, item.ThaiName), 1 => item.KindThai, _ => item.Id }; };
         list.CurrentCellChanged += (_, _) => SelectEntry();
         split.Panel1.Controls.Add(list);
         var right = new TableLayoutPanel { Dock = DockStyle.Fill, BackColor = Theme.Panel, ColumnCount = 1, RowCount = 7, Padding = new Padding(12) };
@@ -121,13 +121,14 @@ public sealed class ApiCatalogForm : Form
         try
         {
             parameters.Rows.Clear(); positional.Clear();
-            var text = new StringBuilder().AppendLine(selected.DisplayName).AppendLine(selected.KindThai + "  ·  " + ApiCatalogService.TranslationThai(selected.NameTranslationSource)).AppendLine(selected.Id).AppendLine();
+            var heading = ApiCatalogService.BilingualName(selected.Name, selected.ThaiName);
+            var text = new StringBuilder().AppendLine(heading).AppendLine(selected.KindThai + "  ·  " + ApiCatalogService.TranslationThai(selected.NameTranslationSource)).AppendLine(selected.Id).AppendLine();
             if (!string.IsNullOrWhiteSpace(selected.ThaiDescription)) text.AppendLine(selected.ThaiDescription);
             if (selected.DescriptionTranslationSource == "generated-summary") text.AppendLine("(สรุปภาษาไทยจากชื่อและชนิดข้อมูล)");
             if (!string.IsNullOrWhiteSpace(selected.Description)) text.AppendLine().AppendLine("คำอธิบายต้นฉบับ:").AppendLine(selected.Description);
             if (selected.PollInFactoryContext.HasValue) text.AppendLine().AppendLine(selected.PollInFactoryContext.Value ? "ผ่านการตรวจบริบทเริ่มต้นของ Blender" : "ต้องเตรียมวัตถุ/โหมด/พื้นที่ทำงานให้ตรงกับคำสั่ง");
             if (selected.ReadOnly) text.AppendLine("คุณสมบัตินี้อ่านอย่างเดียว");
-            details.Text = text.ToString(); details.Select(0, selected.DisplayName.Length); details.SelectionFont = new Font(Font, FontStyle.Bold);
+            details.Text = text.ToString(); details.Select(0, heading.Length); details.SelectionFont = new Font(Font, FontStyle.Bold);
             var typeName = selected.OwnerType?.Split('.').Last() ?? (selected.Id.StartsWith("bpy.types.") ? selected.Id.Split('.')[2] : "");
             target.Text = typeName == "Object" ? "เบลนเดอร์.บริบท.วัตถุ" : typeName == "Mesh" ? "เบลนเดอร์.บริบท.วัตถุ.ข้อมูล" : "เป้าหมาย";
             target.Enabled = selected.Kind is "function" or "property";

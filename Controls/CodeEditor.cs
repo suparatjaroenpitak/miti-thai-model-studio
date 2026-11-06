@@ -59,7 +59,12 @@ public sealed class CodeEditor : UserControl
 
     public void FocusCode() => editor.Focus();
     public void InsertSnippet(string text) { editor.SelectedText = text; editor.Focus(); }
-    public void AppendSnippet(string text) { if (!string.IsNullOrWhiteSpace(editor.Text) && !editor.Text.EndsWith("\n")) editor.AppendText(Environment.NewLine); editor.AppendText(text); editor.Focus(); }
+    public void AppendSnippet(string text, bool focus = true)
+    {
+        if (!string.IsNullOrWhiteSpace(editor.Text) && !editor.Text.EndsWith("\n")) editor.AppendText(Environment.NewLine);
+        editor.AppendText(text);
+        if (focus) editor.Focus();
+    }
     private void PaintGutter(Graphics g)
     {
         var first = editor.GetLineFromCharIndex(editor.GetCharIndexFromPosition(new Point(0, 0)));

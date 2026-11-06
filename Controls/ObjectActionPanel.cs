@@ -7,7 +7,7 @@ namespace ThaiModelStudio;
 /// <summary>Searches Blender's operator inventory and edits typed parameters for a picked object.</summary>
 public sealed class ObjectActionPanel : UserControl
 {
-    private readonly TextBox search = new() { Dock = DockStyle.Top, PlaceholderText = "ค้นหา เช่น แบ่งจุด / subdivide", BackColor = Theme.Raised, ForeColor = Theme.Text };
+    private readonly TextBox search = new() { Dock = DockStyle.Top, PlaceholderText = "Search · ค้นหา เช่น Subdivide / แบ่งจุด", BackColor = Theme.Raised, ForeColor = Theme.Text };
     private readonly ListBox results = new() { Dock = DockStyle.Top, Height = 160, BackColor = Theme.Background, ForeColor = Theme.Text, BorderStyle = BorderStyle.None };
     private readonly FlowLayoutPanel fields = new() { Dock = DockStyle.Fill, FlowDirection = FlowDirection.TopDown, WrapContents = false, AutoScroll = true };
     private readonly Label target = Theme.Label("คลิกขวาที่โมเดลเพื่อเลือกวัตถุ", 9, Theme.Accent);
@@ -35,9 +35,9 @@ public sealed class ObjectActionPanel : UserControl
         BackColor = Theme.Panel; ForeColor = Theme.Text; Padding = new Padding(10);
         target.Dock = DockStyle.Top; target.Height = 32; target.AutoSize = false;
         details.Dock = DockStyle.Top; details.Height = 48; details.AutoSize = false;
-        apply = Theme.Button("ใช้กับวัตถุและสร้างใหม่", (_, _) => Apply(), true);
+        apply = Theme.Button("Apply · ใช้กับวัตถุ", (_, _) => Apply(), true);
         apply.Dock = DockStyle.Bottom; apply.Height = 36; apply.Enabled = false;
-        reset = Theme.Button("คืนค่าพารามิเตอร์เริ่มต้น", (_, _) => SelectAction());
+        reset = Theme.Button("Reset · คืนค่าเริ่มต้น", (_, _) => SelectAction());
         reset.Dock = DockStyle.Bottom; reset.Height = 30;
         previewStatus.Dock = DockStyle.Bottom; previewStatus.Height = 34; previewStatus.AutoSize = false;
         Controls.Add(fields); Controls.Add(previewStatus); Controls.Add(reset); Controls.Add(apply); Controls.Add(details); Controls.Add(results); Controls.Add(search); Controls.Add(target);
@@ -113,7 +113,7 @@ public sealed class ObjectActionPanel : UserControl
         ActionSelected?.Invoke(this, selected?.Id);
         controls.Clear(); fields.Controls.Clear();
         if (selected == null) { apply.Enabled = false; return; }
-        details.Text = selected.DisplayName + "\n" + selected.Id;
+        details.Text = ApiCatalogService.BilingualName(selected.Name, selected.ThaiName) + "\n" + selected.Id;
         foreach (var p in selected.Parameters.Where(p => p.Id != "rna_type" && !p.ReadOnly))
         {
             var englishName = (string.IsNullOrWhiteSpace(p.Name) ? p.Id : p.Name) + (p.Required ? " *" : "");
@@ -228,7 +228,7 @@ public sealed class ObjectActionPanel : UserControl
             if (mode == "EDIT") code.AppendLine("bpy.ops.object.mode_set(mode='OBJECT')");
             return code.ToString();
     }
-    private sealed record Row(ApiEntry Entry) { public override string ToString() => Entry.DisplayName + " · " + Entry.Id; }
+    private sealed record Row(ApiEntry Entry) { public override string ToString() => ApiCatalogService.BilingualName(Entry.Name, Entry.ThaiName) + " · " + Entry.Id; }
     private sealed record Choice(string Id, string Label) { public override string ToString() => Label; }
 
     private static string FriendlyName(ApiParameter p) => p.Id switch

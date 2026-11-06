@@ -1,5 +1,7 @@
 using System.Diagnostics;
+using System.Reflection;
 using ThaiModelStudio;
+using ThaiModelStudio.Controls;
 
 internal static class Program
 {
@@ -13,6 +15,10 @@ internal static class Program
         form.Show();
         var timer = Stopwatch.StartNew();
         while (timer.Elapsed < TimeSpan.FromSeconds(9)) { Application.DoEvents(); Thread.Sleep(50); }
+        var tabs = typeof(MainForm).GetField("modelToolTabs", BindingFlags.NonPublic | BindingFlags.Instance)!.GetValue(form)!;
+        tabs.GetType().GetProperty("SelectedIndex")!.SetValue(tabs, 2);
+        var brush = (SculptBrushPanel)typeof(MainForm).GetField("sculptTools", BindingFlags.NonPublic | BindingFlags.Instance)!.GetValue(form)!;
+        brush.SetActive(true); Application.DoEvents();
         using var image = new Bitmap(form.Width, form.Height);
         form.DrawToBitmap(image, new Rectangle(Point.Empty, image.Size));
         var directory = new DirectoryInfo(AppContext.BaseDirectory);

@@ -14,7 +14,7 @@ public sealed record SceneObjectInfo(string Name, int VertexCount, int TriangleC
 }
 
 public sealed record SculptSample(Vector3 Position, Vector3 Normal);
-public sealed record SculptStroke(string ObjectName, IReadOnlyList<SculptSample> Samples);
+public sealed record SculptStroke(string ObjectName, IReadOnlyList<SculptSample> Samples, string? ModeOverride = null);
 
 /// <summary>A dependency-free, orbitable viewport for Blender's evaluated mesh preview.</summary>
 public sealed class ModelViewport : Control
@@ -69,6 +69,9 @@ public sealed class ModelViewport : Control
     private bool _brushOnMesh;
     private string? _strokeObject;
     private float _sculptRadius = 0.5f;
+    private int _sculptFocalShift;
+    private string _sculptBrushLabel = "Standard · มาตรฐาน";
+    private bool _strokeSmooth;
 
     public ModelViewport()
     {
@@ -101,6 +104,18 @@ public sealed class ModelViewport : Control
     {
         get => _sculptRadius;
         set { _sculptRadius = Math.Clamp(value, 0.01f, 100f); Invalidate(); }
+    }
+    [DefaultValue(0)]
+    public int SculptFocalShift
+    {
+        get => _sculptFocalShift;
+        set { _sculptFocalShift = Math.Clamp(value, -100, 100); Invalidate(); }
+    }
+    [DefaultValue("Standard · มาตรฐาน")]
+    public string SculptBrushLabel
+    {
+        get => _sculptBrushLabel;
+        set { _sculptBrushLabel = value; Invalidate(); }
     }
     public void ClearScene()
     {
@@ -527,7 +542,7 @@ public sealed class ModelViewport : Control
         else
         {
             graphics.FillEllipse(green, 18, 23, 6, 6);
-            graphics.DrawString("มุมมอง 3 มิติ", Font, foreground, 31, 15);
+            graphics.DrawString(_sculptEnabled ? "Sculpt · ปั้น / " + _sculptBrushLabel : "มุมมอง 3 มิติ", Font, foreground, 31, 15);
             graphics.DrawString($"{_objects.Count:N0} วัตถุ  ·  {TriangleCount:N0} สามเหลี่ยม" + (_isSimplified ? "  ·  แสดงผลแบบลดรายละเอียด" : ""),
                 Font, muted, 17, 39);
         }
@@ -550,6 +565,8 @@ public sealed class ModelViewport : Control
         using var fill = new SolidBrush(Color.FromArgb(30, 104, 211, 173));
         graphics.FillEllipse(fill, _brushCursor.X - radius, _brushCursor.Y - radius, radius * 2, radius * 2);
         graphics.DrawEllipse(pen, _brushCursor.X - radius, _brushCursor.Y - radius, radius * 2, radius * 2);
+        float inner = radius * Math.Clamp(0.45f - _sculptFocalShift / 250f, 0.12f, 0.85f);
+        graphics.DrawEllipse(pen, _brushCursor.X - inner, _brushCursor.Y - inner, inner * 2, inner * 2);
     }
 
     protected override void OnMouseDown(MouseEventArgs e)
@@ -562,6 +579,7 @@ public sealed class ModelViewport : Control
             SetupCamera(); BuildTriangles();
             if (!TrySculptHit(e.Location, out var name, out var sample, out _brushDepth)) return;
             _sculpting = true; _strokeObject = name; _strokeSamples.Clear(); _strokePixels.Clear();
+            _strokeSmooth = ModifierKeys.HasFlag(Keys.Shift);
             _strokeSamples.Add(sample); _strokePixels.Add(e.Location);
             _brushCursor = e.Location; _brushOnMesh = true;
             SelectedObject = name; ObjectSelected?.Invoke(this, name);
@@ -617,7 +635,7 @@ public sealed class ModelViewport : Control
         if (_sculpting)
         {
             var stroke = _strokeObject is not null && _strokeSamples.Count > 0
-                ? new SculptStroke(_strokeObject, _strokeSamples.ToArray()) : null;
+                ? new SculptStroke(_strokeObject, _strokeSamples.ToArray(), _strokeSmooth ? "SMOOTH" : null) : null;
             _sculpting = false; _mouseDown = false; Capture = false; Cursor = Cursors.Cross;
             base.OnMouseUp(e);
             if (stroke is not null) SculptStrokeCompleted?.Invoke(this, stroke);
