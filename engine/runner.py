@@ -14,6 +14,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import thai_model
 import thai_api
 import thai_workspace
+import mesh_mask
 from sculpt_brush import sculpt_stroke
 
 PREVIEW_TRIANGLES = 60000
@@ -159,6 +160,10 @@ def main():
     namespace.update({name: getattr(thai_api, name) for name in thai_api.__all__})
     namespace.update({name: getattr(thai_workspace, name) for name in thai_workspace.__dict__ if not name.startswith('_')})
     namespace['_miti_sculpt_stroke'] = sculpt_stroke
+    namespace['_miti_mask_set'] = mesh_mask.mask_set
+    namespace['_miti_mask_clear'] = mesh_mask.mask_clear
+    namespace['_miti_mask_invert'] = mesh_mask.mask_invert
+    namespace['_miti_mask_feather'] = mesh_mask.mask_feather
     log('Building model...')
     exec(compile(source, str(source_path), 'exec'), namespace, namespace)
     bpy.context.view_layer.update()

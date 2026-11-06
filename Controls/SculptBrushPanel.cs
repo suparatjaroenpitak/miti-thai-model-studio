@@ -27,6 +27,8 @@ public sealed class SculptBrushPanel : UserControl
     public string Mode => mode;
     public string BrushLabel => brushButtons[mode].Text.Replace("\n", " · ");
     public bool Subtract => subtract;
+    [System.ComponentModel.DesignerSerializationVisibility(System.ComponentModel.DesignerSerializationVisibility.Hidden)]
+    public bool UseMask { get; set; } = true;
     public string Symmetry => (symmetryX.Checked ? "X" : "") + (symmetryY.Checked ? "Y" : "") + (symmetryZ.Checked ? "Z" : "");
 
     public SculptBrushPanel()
@@ -35,17 +37,21 @@ public sealed class SculptBrushPanel : UserControl
         var flow = new FlowLayoutPanel { Dock = DockStyle.Fill, AutoScroll = true, FlowDirection = FlowDirection.TopDown,
             WrapContents = false, Padding = new Padding(5, 10, 0, 0), BackColor = Theme.Panel };
         Controls.Add(flow);
-        AddLabel(flow, "Brush · หัวแปรง", true);
+        AddLabel(flow, "Brush · หัวแปรง (ZBrush-style)", true);
         toggle = Theme.Button("เปิด Sculpt Mode · โหมดปั้น", (_, _) => SetActive(!active), true);
         toggle.Width = 220; toggle.Height = 36; toggle.Margin = new Padding(0, 0, 0, 5); flow.Controls.Add(toggle);
         var undo = Theme.Button("Undo Stroke · ย้อนรอยล่าสุด", (_, _) => UndoRequested?.Invoke(this, EventArgs.Empty));
         undo.Width = 220; undo.Height = 32; undo.Margin = new Padding(0, 0, 0, 7); flow.Controls.Add(undo);
-        var palette = new FlowLayoutPanel { Width = 222, Height = 170, WrapContents = true, Margin = Padding.Empty };
+        var palette = new FlowLayoutPanel { Width = 222, Height = 326, WrapContents = true, Margin = Padding.Empty };
         foreach (var (id, english, thai) in new[] {
             ("STANDARD", "Standard", "มาตรฐาน"), ("CLAY", "Clay", "เติมดิน"),
+            ("CLAY_TUBES", "Clay Tubes", "เติมดินก้อน"), ("CLAY_STRIPS", "Clay Strips", "เติมดินเส้น"),
             ("MOVE", "Move", "ดึงผิว"), ("SMOOTH", "Smooth", "เกลี่ยผิว"),
             ("FLATTEN", "Flatten", "ปรับแบน"), ("PINCH", "Pinch", "บีบผิว"),
-            ("INFLATE", "Inflate", "พองผิว"), ("CREASE", "Crease", "เซาะร่อง") })
+            ("INFLATE", "Inflate", "พองผิว"), ("CREASE", "Crease", "เซาะร่อง"),
+            ("DAM_STANDARD", "Dam Standard", "ร่องลึก"), ("TRIM_DYNAMIC", "Trim Dynamic", "ตัดระนาบ"),
+            ("SNAKE_HOOK", "Snake Hook", "ดึงยื่น"), ("POLISH", "Polish", "ขัดผิว"),
+            ("LAYER", "Layer", "ยกชั้น"), ("FILL", "Fill", "ถมเต็ม") })
         {
             var button = PaletteButton(english + "\n" + thai, (_, _) => SetMode(id));
             palette.Controls.Add(button); brushButtons.Add(id, button);
@@ -63,8 +69,8 @@ public sealed class SculptBrushPanel : UserControl
         var axes = new FlowLayoutPanel { Width = 222, Height = 30, WrapContents = false, Margin = Padding.Empty };
         axes.Controls.AddRange([symmetryX, symmetryY, symmetryZ]); flow.Controls.Add(axes);
         AddLabel(flow, "Detail · แบ่งผิวครั้งแรก"); flow.Controls.Add(detail);
-        var hint = Theme.Label("ลากซ้ายบนผิวโมเดล · Shift: Smooth\nAlt + ลากซ้าย: หมุน · X: Symmetry\n[ ]: ปรับขนาดแปรง · ปล่อยเพื่อบันทึก", 8.5f, Theme.Muted);
-        hint.AutoSize = false; hint.Width = 220; hint.Height = 65; flow.Controls.Add(hint);
+        var hint = Theme.Label("ลากซ้ายบนผิวโมเดล · Shift: Smooth\nAlt + ลากซ้าย: หมุน · X: Symmetry\n[ ]: ปรับขนาดแปรง · ปล่อยเพื่อบันทึก\nมาสก์จากแท็บ Mask จะกันบริเวณที่ปั้น", 8.5f, Theme.Muted);
+        hint.AutoSize = false; hint.Width = 220; hint.Height = 84; flow.Controls.Add(hint);
         foreach (var input in new[] { radius, strength, focal, detail })
             input.ValueChanged += (_, _) => SettingsChanged?.Invoke(this, EventArgs.Empty);
         foreach (var axis in new[] { symmetryX, symmetryY, symmetryZ })
@@ -104,7 +110,9 @@ public sealed class SculptBrushPanel : UserControl
             .Append(", mode=").Append(ApiCatalogService.PythonString(actualMode)).Append(", detail=").Append(Detail)
             .Append(", subtract=").Append(subtract ? "True" : "False")
             .Append(", symmetry=").Append(ApiCatalogService.PythonString(Symmetry))
-            .Append(", focal_shift=").Append(FocalShift).AppendLine(")");
+            .Append(", focal_shift=").Append(FocalShift);
+        if (UseMask) code.Append(", mask=").Append(ApiCatalogService.PythonString("MitiMask"));
+        code.AppendLine(")");
         return code.ToString();
     }
 

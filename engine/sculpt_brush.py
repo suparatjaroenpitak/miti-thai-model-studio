@@ -1,4 +1,9 @@
-"""Apply bilingual sculpt palette strokes to a Blender mesh without UI context."""
+"""Apply bilingual sculpt palette strokes to a Blender mesh without UI context.
+
+The brush set covers the ZBrush-style names offered by the app; each one is a
+deterministic displacement of the mesh around the recorded stroke, evaluated
+with Blender's mesh data. A vertex-group mask, when present, weakens the brush.
+"""
 
 import math
 
@@ -6,8 +11,18 @@ import bmesh
 import bpy
 from mathutils import Vector
 
+try:
+    from mesh_mask import MASK_GROUP, read_weights
+except ImportError:  # The runner always adds engine/ to sys.path first.
+    MASK_GROUP = 'MitiMask'
+    read_weights = None
 
-BRUSHES = {'DRAW', 'STANDARD', 'CLAY', 'INFLATE', 'SMOOTH', 'FLATTEN', 'PINCH', 'MOVE', 'CREASE'}
+
+BRUSHES = {
+    'DRAW', 'STANDARD', 'CLAY', 'CLAY_STRIPS', 'CLAY_TUBES', 'INFLATE', 'SMOOTH',
+    'FLATTEN', 'PINCH', 'MOVE', 'CREASE', 'DAM_STANDARD', 'TRIM_DYNAMIC',
+    'SNAKE_HOOK', 'POLISH', 'LAYER', 'FILL',
+}
 
 
 def _mirrored_samples(obj, inverse, samples, symmetry):
@@ -38,7 +53,7 @@ def _mirrored_samples(obj, inverse, samples, symmetry):
 
 
 def sculpt_stroke(object_name, samples, radius=0.8, strength=0.5, mode='DRAW', detail=3,
-                  subtract=False, symmetry='', focal_shift=0):
+                  subtract=False, symmetry='', focal_shift=0, mask=MASK_GROUP):
     obj = bpy.data.objects.get(object_name)
     if obj is None or obj.type != 'MESH':
         raise ValueError('ไม่พบเมชสำหรับปั้น: ' + object_name)
@@ -70,15 +85,23 @@ def sculpt_stroke(object_name, samples, radius=0.8, strength=0.5, mode='DRAW', d
     normal_matrix = inverse_direction.transposed()
     paths = _mirrored_samples(obj, inverse, samples, symmetry)
     adjacency = None
-    if mode == 'SMOOTH':
+    if mode in {'SMOOTH', 'POLISH'}:
         adjacency = [[] for _ in mesh.vertices]
         for edge in mesh.edges:
             a, b = edge.vertices
             adjacency[a].append(b)
             adjacency[b].append(a)
 
+    mask_weights = None
+    if mask and read_weights is not None and obj.vertex_groups.get(mask) is not None:
+        mask_weights = read_weights(obj)
+
     sign = -1 if subtract else 1
     exponent = 2 * (2 ** (focal_shift / 50))
+    if mode == 'DAM_STANDARD':
+        exponent *= 1.7
+    elif mode in {'LAYER', 'FILL'}:
+        exponent *= 0.5
     for path in paths:
         previous_center = None
         for center, normal in path:
@@ -91,21 +114,47 @@ def sculpt_stroke(object_name, samples, radius=0.8, strength=0.5, mode='DRAW', d
                 distance = offset.length
                 if distance >= radius:
                     continue
-                falloff = (1 - distance / radius) ** (exponent * (0.6 if mode == 'CLAY' else 1))
+                falloff = (1 - distance / radius) ** (exponent * (0.6 if mode in {'CLAY', 'CLAY_STRIPS', 'CLAY_TUBES'} else 1))
                 influence = strength * falloff
+                if mask_weights is not None:
+                    influence *= 1.0 - mask_weights[vertex.index]
+                if influence <= 0.0:
+                    continue
                 if mode == 'SMOOTH':
                     neighbors = adjacency[vertex.index]
                     if neighbors:
                         average = sum((positions[index] for index in neighbors), Vector()) / len(neighbors)
                         vertex.co = positions[vertex.index].lerp(average, influence)
-                elif mode == 'MOVE':
+                elif mode == 'MOVE' or mode == 'SNAKE_HOOK':
                     vertex.co += (inverse_direction @ drag) * (influence * sign)
-                elif mode == 'FLATTEN':
+                    if mode == 'SNAKE_HOOK':
+                        vertex.co += (inverse_direction @ normal) * (radius * 0.12 * influence * sign)
+                elif mode == 'FLATTEN' or mode == 'TRIM_DYNAMIC':
                     height = offset.dot(normal)
-                    vertex.co -= (inverse_direction @ normal) * (height * influence * sign)
+                    strength_scale = 1.5 if mode == 'TRIM_DYNAMIC' else 1.0
+                    vertex.co -= (inverse_direction @ normal) * (height * min(1.0, influence * strength_scale) * sign)
                 elif mode == 'PINCH':
                     tangent = -offset + normal * offset.dot(normal)
                     vertex.co += (inverse_direction @ tangent) * (influence * 0.55 * sign)
+                elif mode == 'POLISH':
+                    neighbors = adjacency[vertex.index]
+                    if neighbors:
+                        average = sum((positions[index] for index in neighbors), Vector()) / len(neighbors)
+                        vertex.co = positions[vertex.index].lerp(average, influence * 0.6)
+                    height = offset.dot(normal)
+                    vertex.co -= (inverse_direction @ normal) * (height * influence * 0.4 * sign)
+                elif mode == 'DAM_STANDARD':
+                    amount = radius * 0.35 * influence
+                    tangent = -offset + normal * offset.dot(normal)
+                    vertex.co += (inverse_direction @ tangent) * (influence * 0.3 * sign)
+                    vertex.co += (inverse_direction @ normal) * (amount * sign)
+                elif mode == 'CLAY_STRIPS' or mode == 'CLAY_TUBES':
+                    amount = radius * (0.55 if mode == 'CLAY_TUBES' else 0.38) * influence
+                    vertex.co += (inverse_direction @ normal) * (amount * sign)
+                elif mode == 'LAYER':
+                    vertex.co += (inverse_direction @ normal) * (radius * 0.1 * sign)
+                elif mode == 'FILL':
+                    vertex.co += (inverse_direction @ normal) * (radius * 0.18 * influence * sign)
                 else:
                     world_normal = normal
                     if mode == 'INFLATE':
