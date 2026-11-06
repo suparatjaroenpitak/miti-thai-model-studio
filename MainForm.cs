@@ -11,6 +11,7 @@ public sealed class MainForm : Form
     private readonly ModelViewport viewport = new() { Dock = DockStyle.Fill };
     private readonly ObjectActionPanel objectActions = new() { Dock = DockStyle.Fill };
     private readonly ShapeTransformPanel shapeTools = new() { Dock = DockStyle.Fill };
+    private readonly SculptBrushPanel sculptTools = new() { Dock = DockStyle.Fill };
     private readonly StudioTabs modelToolTabs = new() { Dock = DockStyle.Fill };
     private readonly ContextMenuStrip objectMenu = new();
     private readonly ToolStripTextBox objectMenuSearch = new() { Width = 230 };
@@ -97,6 +98,23 @@ public sealed class MainForm : Form
         };
         viewport.ObjectSelected += (_, name) => objects.SelectedIndex = objects.Items.IndexOf(name);
         viewport.ObjectContextRequested += (_, name) => OpenObjectActions(name);
+        sculptTools.SettingsChanged += (_, _) =>
+        {
+            viewport.SculptEnabled = sculptTools.Active;
+            viewport.SculptRadius = sculptTools.Radius;
+            status.Text = sculptTools.Active ? "โหมดแปรงปั้นพร้อมใช้งาน — ลากเมาส์ซ้ายบนผิวโมเดล" : "ปิดโหมดแปรงปั้นแล้ว";
+        };
+        viewport.SculptStrokeCompleted += async (_, stroke) =>
+        {
+            if (Busy) return;
+            try
+            {
+                editor.AppendSnippet(sculptTools.GenerateSnippet(stroke));
+                status.Text = "กำลังบันทึกรอยแปรงด้วย Blender…";
+                await BuildModelAsync();
+            }
+            catch (Exception ex) { ShowError("ปั้นโมเดลไม่สำเร็จ", ex); }
+        };
         objectActions.ApplyRequested += async (_, code) =>
         {
             if (Busy) return;
@@ -212,7 +230,7 @@ public sealed class MainForm : Form
         var help = new ToolStripMenuItem("คู่มือ");
         Add(help, "คำสั่งและวิธีใช้", (_, _) => ShowHelp(), Keys.F1, false);
         Add(help, "เกี่ยวกับ มิติ สตูดิโอ", (_, _) => MessageBox.Show(this,
-            "มิติ สตูดิโอ 0.7.2\nสร้างรูปทรง 8 แบบและปรับตำแหน่ง หมุน สเกลด้วยแผงด้านขวา\n\nคลิกขวาที่โมเดลเพื่อค้นหาคำสั่ง หรือใช้แท็บ รูปทรง/แปลง\nค่าที่ปรับจะแสดงภาพตัวอย่าง ก่อนกดใช้กับวัตถุเพื่อบันทึก\nCtrl+Space เปิดคลัง API Blender\n\nใช้ Blender จริงเป็นเอนจิน\nคำสั่งบางชนิดต้องเตรียมวัตถุ โหมด หรือหน้าต่างให้เหมาะสม",
+            "มิติ สตูดิโอ 0.7.3\nสร้างรูปทรง 8 แบบและปรับตำแหน่ง หมุน สเกลด้วยแผงด้านขวา\n\nเปิดแท็บแปรงปั้นเพื่อลากบนผิวโมเดลใน viewport\nคลิกขวาที่โมเดลเพื่อค้นหาคำสั่ง หรือใช้แท็บ รูปทรง/แปลง\nCtrl+Space เปิดคลัง API Blender\n\nใช้ Blender จริงเป็นเอนจิน\nคำสั่งบางชนิดต้องเตรียมวัตถุ โหมด หรือหน้าต่างให้เหมาะสม",
             "เกี่ยวกับ", MessageBoxButtons.OK, MessageBoxIcon.Information), idleOnly: false);
         menu.Items.AddRange([file, model, view, settings, help]);
         return menu;
@@ -306,8 +324,13 @@ public sealed class MainForm : Form
         modelToolTabs.TabPages.Clear();
         var actionPage = new StudioTabPage("คำสั่ง");
         var toolsPage = new StudioTabPage("รูปทรง/แปลง");
-        actionPage.Controls.Add(objectActions); toolsPage.Controls.Add(shapeTools);
-        modelToolTabs.TabPages.AddRange([actionPage, toolsPage]); modelToolTabs.SelectedIndex = 1;
+        var sculptPage = new StudioTabPage("แปรงปั้น");
+        actionPage.Controls.Add(objectActions); toolsPage.Controls.Add(shapeTools); sculptPage.Controls.Add(sculptTools);
+        modelToolTabs.TabPages.AddRange([actionPage, toolsPage, sculptPage]); modelToolTabs.SelectedIndex = 1;
+        modelToolTabs.SelectedIndexChanged += (_, _) =>
+        {
+            if (modelToolTabs.SelectedIndex != 2 && sculptTools.Active) sculptTools.SetActive(false);
+        };
         var body = new SplitContainer { Dock = DockStyle.Fill, Orientation = Orientation.Vertical, SplitterWidth = 3, BackColor = Theme.Border, FixedPanel = FixedPanel.Panel2 };
         body.Panel1.Controls.Add(viewport); body.Panel2.Controls.Add(modelToolTabs); body.SplitterDistance = 300;
         viewportSplit = body;
@@ -571,6 +594,7 @@ public sealed class MainForm : Form
     {
         operation = new CancellationTokenSource(); status.Text = message;
         run.Enabled = false; export.Enabled = false; stop.Enabled = true; editor.IsReadOnly = true;
+        viewport.SculptEnabled = false; sculptTools.Enabled = false;
         foreach (var item in idleItems) item.Enabled = false;
         UseWaitCursor = false;
         return operation;
@@ -580,6 +604,7 @@ public sealed class MainForm : Form
         if (operation == cts) operation = null;
         cts.Dispose(); if (closing || IsDisposed) return;
         run.Enabled = true; export.Enabled = lastBuild != null && !livePreviewShowing; stop.Enabled = false; editor.IsReadOnly = false;
+        sculptTools.Enabled = true; viewport.SculptEnabled = sculptTools.Active;
         foreach (var item in idleItems) item.Enabled = true;
     }
     private void Log(string text)
@@ -680,6 +705,8 @@ Ctrl+Space หรือปุ่ม คลัง Blender ภาษาไทย
 1. เลือกตัวอย่างด้านซ้าย หรือเขียน Python ของคุณ
 2. กด F5 / สร้างโมเดล แล้วรอ Blender ทำงาน
 3. ลากเมาส์ซ้ายเพื่อหมุน • ลากขวา/กลางเพื่อเลื่อน • หมุนล้อเพื่อซูม
+   แท็บแปรงปั้น: เลือก Draw, Inflate หรือ Smooth แล้วเปิดโหมดปั้น ลากซ้ายบนผิวโมเดล
+   ในโหมดแปรงใช้ Alt + ลากซ้ายเพื่อหมุนมุมมอง ปล่อยเมาส์เพื่อให้ Blender บันทึกรอยแปรง
 4. กดส่งออกโมเดล เลือก GLB, Blender, OBJ หรือ STL
 
 คำสั่งเริ่มต้น

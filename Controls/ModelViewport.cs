@@ -13,6 +13,9 @@ public sealed record SceneObjectInfo(string Name, int VertexCount, int TriangleC
     public Vector3 Scale { get; init; } = Vector3.One;
 }
 
+public sealed record SculptSample(Vector3 Position, Vector3 Normal);
+public sealed record SculptStroke(string ObjectName, IReadOnlyList<SculptSample> Samples);
+
 /// <summary>A dependency-free, orbitable viewport for Blender's evaluated mesh preview.</summary>
 public sealed class ModelViewport : Control
 {
@@ -30,7 +33,8 @@ public sealed class ModelViewport : Control
     }
 
     private readonly record struct ProjectedVertex(PointF Point, float Depth, bool Visible);
-    private readonly record struct DrawTriangle(PointF A, PointF B, PointF C, float Depth, Color Color, int ObjectIndex);
+    private readonly record struct DrawTriangle(PointF A, PointF B, PointF C, Vector3 WorldA, Vector3 WorldB, Vector3 WorldC,
+        float Depth, Color Color, int ObjectIndex);
 
     private List<Mesh> _meshes = [];
     private List<SceneObjectInfo> _objects = [];
@@ -56,6 +60,15 @@ public sealed class ModelViewport : Control
     private Vector3 _forward;
     private float _focal;
     private bool _isSimplified;
+    private bool _sculptEnabled;
+    private bool _sculpting;
+    private readonly List<SculptSample> _strokeSamples = [];
+    private readonly List<Point> _strokePixels = [];
+    private Point _brushCursor;
+    private float _brushDepth;
+    private bool _brushOnMesh;
+    private string? _strokeObject;
+    private float _sculptRadius = 0.5f;
 
     public ModelViewport()
     {
@@ -68,7 +81,7 @@ public sealed class ModelViewport : Control
         TabStop = true;
         MinimumSize = new Size(180, 180);
         AccessibleName = "มุมมองโมเดลสามมิติ";
-        AccessibleDescription = "คลิกขวาที่โมเดลเพื่อค้นหาคำสั่ง ลากซ้ายเพื่อหมุน ลากขวาเพื่อเลื่อน หมุนลูกล้อเพื่อซูม กด F เพื่อพอดีจอ";
+        AccessibleDescription = "คลิกขวาที่โมเดลเพื่อค้นหาคำสั่ง ลากซ้ายเพื่อหมุน หรือเปิดโหมดแปรงปั้นเพื่อลากบนผิวโมเดล ลากขวาเพื่อเลื่อน หมุนลูกล้อเพื่อซูม กด F เพื่อพอดีจอ";
     }
 
     public IReadOnlyList<SceneObjectInfo> Objects => _objects.AsReadOnly();
@@ -77,9 +90,22 @@ public sealed class ModelViewport : Control
     public bool IsSimplified => _isSimplified;
     public int SourceTriangleCount { get; private set; }
     public bool HasScene => _meshes.Count > 0;
+    [DefaultValue(false)]
+    public bool SculptEnabled
+    {
+        get => _sculptEnabled;
+        set { _sculptEnabled = value; _brushOnMesh = false; Cursor = value ? Cursors.Cross : Cursors.Default; Invalidate(); }
+    }
+    [DefaultValue(0.5f)]
+    public float SculptRadius
+    {
+        get => _sculptRadius;
+        set { _sculptRadius = Math.Clamp(value, 0.01f, 100f); Invalidate(); }
+    }
     public void ClearScene()
     {
         _meshes.Clear(); _objects.Clear(); SelectedObject = null; SourceTriangleCount = 0; _isSimplified = false;
+        _strokePixels.Clear(); _brushOnMesh = false;
         Invalidate(); SceneLoaded?.Invoke(this, EventArgs.Empty);
     }
 
@@ -124,6 +150,7 @@ public sealed class ModelViewport : Control
     public event EventHandler? SceneLoaded;
     public event EventHandler<string>? ObjectSelected;
     public event EventHandler<string>? ObjectContextRequested;
+    public event EventHandler<SculptStroke>? SculptStrokeCompleted;
 
     public void LoadScene(string previewPath, bool preserveView = false)
     {
@@ -214,6 +241,7 @@ public sealed class ModelViewport : Control
         SourceTriangleCount = document.RootElement.TryGetProperty("sourceTriangleCount", out var sourceCount)
             && sourceCount.TryGetInt32(out int count) ? count : TriangleCount;
         _triangles.Clear();
+        _strokePixels.Clear(); _brushOnMesh = false;
         FitScene();
         if (preserveView)
         {
@@ -309,6 +337,7 @@ public sealed class ModelViewport : Control
         DrawSelection(graphics);
         DrawAxes(graphics);
         DrawOverlay(graphics);
+        DrawSculptOverlay(graphics);
     }
 
     private void DrawQuickSubdivision(Graphics graphics)
@@ -395,7 +424,8 @@ public sealed class ModelViewport : Control
                 float intensity = 0.36f + 0.64f * Math.Abs(Vector3.Dot(normal, light));
                 var baseColor = mesh.TriangleColors is { } colors && faceIndex < colors.Length ? colors[faceIndex] : mesh.Color;
                 var color = Shade(baseColor, intensity, selected);
-                _triangles.Add(new DrawTriangle(a.Point, b.Point, c.Point, (a.Depth + b.Depth + c.Depth) / 3, color, objectIndex));
+                _triangles.Add(new DrawTriangle(a.Point, b.Point, c.Point, mesh.Vertices[face[0]], mesh.Vertices[face[1]], mesh.Vertices[face[2]],
+                    (a.Depth + b.Depth + c.Depth) / 3, color, objectIndex));
             }
         }
         _triangles.Sort((a, b) => b.Depth.CompareTo(a.Depth));
@@ -503,9 +533,23 @@ public sealed class ModelViewport : Control
         }
         if (ClientSize.Width >= 380)
         {
-            string hint = "คลิกขวา: ค้นหาคำสั่ง   ·   ลากซ้าย: หมุน   ·   ลากขวา: เลื่อน   ·   ลูกล้อ: ซูม";
+            string hint = _sculptEnabled
+                ? "แปรงปั้น: ลากซ้ายบนโมเดล   ·   Alt+ลากซ้าย: หมุน   ·   ลากขวา: เลื่อน"
+                : "คลิกขวา: ค้นหาคำสั่ง   ·   ลากซ้าย: หมุน   ·   ลากขวา: เลื่อน   ·   ลูกล้อ: ซูม";
             graphics.DrawString(hint, Font, muted, 16, ClientSize.Height - 29);
         }
+    }
+
+    private void DrawSculptOverlay(Graphics graphics)
+    {
+        if (!_sculptEnabled) return;
+        using var pen = new Pen(Color.FromArgb(240, 104, 211, 173), 2);
+        if (_strokePixels.Count > 1) graphics.DrawLines(pen, _strokePixels.ToArray());
+        if (!_brushOnMesh) return;
+        float radius = Math.Clamp(_sculptRadius * _focal / Math.Max(_brushDepth, 0.001f), 3, 1000);
+        using var fill = new SolidBrush(Color.FromArgb(30, 104, 211, 173));
+        graphics.FillEllipse(fill, _brushCursor.X - radius, _brushCursor.Y - radius, radius * 2, radius * 2);
+        graphics.DrawEllipse(pen, _brushCursor.X - radius, _brushCursor.Y - radius, radius * 2, radius * 2);
     }
 
     protected override void OnMouseDown(MouseEventArgs e)
@@ -513,6 +557,17 @@ public sealed class ModelViewport : Control
         base.OnMouseDown(e);
         if (e.Button is not (MouseButtons.Left or MouseButtons.Right or MouseButtons.Middle)) return;
         Focus();
+        if (_sculptEnabled && e.Button == MouseButtons.Left && !ModifierKeys.HasFlag(Keys.Alt))
+        {
+            SetupCamera(); BuildTriangles();
+            if (!TrySculptHit(e.Location, out var name, out var sample, out _brushDepth)) return;
+            _sculpting = true; _strokeObject = name; _strokeSamples.Clear(); _strokePixels.Clear();
+            _strokeSamples.Add(sample); _strokePixels.Add(e.Location);
+            _brushCursor = e.Location; _brushOnMesh = true;
+            SelectedObject = name; ObjectSelected?.Invoke(this, name);
+            _mouseDown = true; _dragButton = e.Button; Capture = true; Cursor = Cursors.Cross;
+            Invalidate(); return;
+        }
         _mouseDown = true;
         _dragged = false;
         _dragButton = e.Button;
@@ -524,6 +579,20 @@ public sealed class ModelViewport : Control
     protected override void OnMouseMove(MouseEventArgs e)
     {
         base.OnMouseMove(e);
+        if (_sculptEnabled)
+        {
+            _brushCursor = e.Location;
+            _brushOnMesh = TrySculptHit(e.Location, out var name, out var sample, out var depth);
+            if (_brushOnMesh) _brushDepth = depth;
+            if (_sculpting)
+            {
+                if (_brushOnMesh && name == _strokeObject && _strokeSamples.Count < 128 &&
+                    (_strokePixels.Count == 0 || DistanceSquared(_strokePixels[^1], e.Location) >= 64))
+                { _strokeSamples.Add(sample); _strokePixels.Add(e.Location); }
+                Invalidate(); return;
+            }
+            if (!_mouseDown) { Invalidate(); return; }
+        }
         if (!_mouseDown) return;
         int dx = e.X - _lastMouse.X, dy = e.Y - _lastMouse.Y;
         if (Math.Abs(e.X - _mouseStart.X) + Math.Abs(e.Y - _mouseStart.Y) > 4) _dragged = true;
@@ -545,12 +614,21 @@ public sealed class ModelViewport : Control
 
     protected override void OnMouseUp(MouseEventArgs e)
     {
+        if (_sculpting)
+        {
+            var stroke = _strokeObject is not null && _strokeSamples.Count > 0
+                ? new SculptStroke(_strokeObject, _strokeSamples.ToArray()) : null;
+            _sculpting = false; _mouseDown = false; Capture = false; Cursor = Cursors.Cross;
+            base.OnMouseUp(e);
+            if (stroke is not null) SculptStrokeCompleted?.Invoke(this, stroke);
+            _strokeSamples.Clear(); Invalidate(); return;
+        }
         base.OnMouseUp(e);
         bool pick = _mouseDown && !_dragged && _dragButton is MouseButtons.Left or MouseButtons.Right;
         bool context = pick && _dragButton == MouseButtons.Right;
         _mouseDown = false;
         Capture = false;
-        Cursor = Cursors.Default;
+        Cursor = _sculptEnabled ? Cursors.Cross : Cursors.Default;
         if (pick)
         {
             // Rebuild without the interactive sampling before picking.
@@ -574,9 +652,45 @@ public sealed class ModelViewport : Control
         base.OnMouseCaptureChanged(e);
         if (Capture) return;
         _mouseDown = false;
-        Cursor = Cursors.Default;
+        _sculpting = false; _strokeSamples.Clear();
+        Cursor = _sculptEnabled ? Cursors.Cross : Cursors.Default;
         Invalidate();
     }
+
+    private bool TrySculptHit(Point point, out string name, out SculptSample sample, out float depth)
+    {
+        name = ""; sample = null!; depth = 0;
+        for (int i = _triangles.Count - 1; i >= 0; i--)
+        {
+            var triangle = _triangles[i];
+            if (!ContainsPoint(triangle, point)) continue;
+            float denominator = (triangle.B.Y - triangle.C.Y) * (triangle.A.X - triangle.C.X)
+                + (triangle.C.X - triangle.B.X) * (triangle.A.Y - triangle.C.Y);
+            if (Math.Abs(denominator) < 0.001f) continue;
+            float a = ((triangle.B.Y - triangle.C.Y) * (point.X - triangle.C.X)
+                + (triangle.C.X - triangle.B.X) * (point.Y - triangle.C.Y)) / denominator;
+            float b = ((triangle.C.Y - triangle.A.Y) * (point.X - triangle.C.X)
+                + (triangle.A.X - triangle.C.X) * (point.Y - triangle.C.Y)) / denominator;
+            float c = 1 - a - b;
+            float da = Vector3.Dot(triangle.WorldA - _eye, _forward);
+            float db = Vector3.Dot(triangle.WorldB - _eye, _forward);
+            float dc = Vector3.Dot(triangle.WorldC - _eye, _forward);
+            float perspective = a / da + b / db + c / dc;
+            if (perspective <= 0 || !float.IsFinite(perspective)) continue;
+            var position = (triangle.WorldA * (a / da) + triangle.WorldB * (b / db) + triangle.WorldC * (c / dc)) / perspective;
+            var normal = Vector3.Cross(triangle.WorldB - triangle.WorldA, triangle.WorldC - triangle.WorldA);
+            if (normal.LengthSquared() < 1e-12f) continue;
+            normal = Vector3.Normalize(normal);
+            if (Vector3.Dot(normal, _eye - position) < 0) normal = -normal;
+            name = _meshes[triangle.ObjectIndex].Name;
+            sample = new SculptSample(position, normal);
+            depth = Vector3.Dot(position - _eye, _forward);
+            return true;
+        }
+        return false;
+    }
+
+    private static int DistanceSquared(Point a, Point b) => (a.X - b.X) * (a.X - b.X) + (a.Y - b.Y) * (a.Y - b.Y);
 
     protected override void OnMouseWheel(MouseEventArgs e)
     {
