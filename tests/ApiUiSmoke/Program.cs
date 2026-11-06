@@ -42,6 +42,9 @@ internal static class Program
             throw new Exception("Missing parameter " + id);
         }
         Select("bpy.ops.mesh.primitive_cube_add");
+        var sizeLabel = parameters.Rows.Cast<DataGridViewRow>().First(r => (r.Tag as ApiParameter)?.Id == "size").Cells[1].Value?.ToString();
+        if (sizeLabel is null || !sizeLabel.StartsWith("Size · ", StringComparison.Ordinal))
+            throw new Exception("API catalog parameter should show Blender English before Thai");
         Parameter("size", "4"); Parameter("location", "(2, 0, 2)"); Parameter("scale", "(1, 1, 1)");
         snippets.Add(code.Text); snippets.Add("วัตถุแรก = bpy.context.object\nassert tuple(วัตถุแรก.location) == (2, 0, 2)\nassert tuple(วัตถุแรก.dimensions) == (4, 4, 4)");
         if (!code.Text.Contains("ขนาด_2=")) throw new Exception("Translated size/scale collision not disambiguated");

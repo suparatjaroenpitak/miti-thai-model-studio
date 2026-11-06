@@ -109,6 +109,14 @@ public static class ApiCatalogService
         "BOOLEAN" => "จริง/เท็จ", "INT" => "จำนวนเต็ม", "FLOAT" => "ทศนิยม", "STRING" => "ข้อความ",
         "ENUM" => "ตัวเลือก", "POINTER" => "อ้างอิง", "COLLECTION" => "ชุดข้อมูล", "PYTHON" => "ข้อมูล Python", _ => type
     };
+    public static string BilingualName(string english, string? thai, string separator = " · ")
+    {
+        var primary = english.Trim();
+        var secondary = thai?.Trim();
+        if (primary.Length == 0) return secondary ?? "";
+        return string.IsNullOrEmpty(secondary) || string.Equals(primary, secondary, StringComparison.OrdinalIgnoreCase)
+            ? primary : primary + separator + secondary;
+    }
     public static string PythonString(string value) => JsonSerializer.Serialize(value, new JsonSerializerOptions { Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping });
     public static string PythonValue(JsonElement value, string type = "") => value.ValueKind switch
     {

@@ -37,6 +37,8 @@ internal static class Program
         if (panel.Matches.Count == 0) throw new Exception("Operator search did not load");
         panel.Choose(panel.Matches.First(e => e.Id == "bpy.ops.mesh.subdivide"));
         var fields = (FlowLayoutPanel)typeof(ObjectActionPanel).GetField("fields", BindingFlags.Instance | BindingFlags.NonPublic)!.GetValue(panel)!;
+        var cutLabel = fields.Controls.OfType<Label>().First().Text;
+        if (cutLabel != "Number of Cuts\nจำนวนครั้งที่แบ่ง") throw new Exception("Parameter label should show Blender English before Thai");
         var cut = fields.Controls.OfType<NumericUpDown>().First();
         if (cut.Minimum != 1 || cut.Maximum != 100 || cut.Value != 1) throw new Exception("Number of Cuts controls do not match Blender metadata");
         cut.Value = 2;

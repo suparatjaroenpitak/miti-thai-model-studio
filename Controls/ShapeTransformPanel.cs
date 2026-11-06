@@ -40,28 +40,28 @@ public sealed class ShapeTransformPanel : UserControl
         tabs.TabPages.AddRange([createPage, editPage]); Controls.Add(tabs);
         Theme.UseDarkControls(shapes, shapeName);
         var create = MakeFlow(); createPage.Controls.Add(create);
-        AddLabel(create, "รูปทรง"); create.Controls.Add(shapes);
+        AddLabel(create, "Shape · รูปทรง"); create.Controls.Add(shapes);
         foreach (var shape in new[] {
-            new Shape("กล่อง", "primitive_cube_add", "กล่องใหม่"),
-            new Shape("ทรงกลม UV", "primitive_uv_sphere_add", "ทรงกลมใหม่"),
-            new Shape("ทรงกลมเหลี่ยม", "primitive_ico_sphere_add", "ทรงกลมเหลี่ยม"),
-            new Shape("ทรงกระบอก", "primitive_cylinder_add", "ทรงกระบอกใหม่"),
-            new Shape("ทรงกรวย", "primitive_cone_add", "ทรงกรวยใหม่"),
-            new Shape("โดนัท", "primitive_torus_add", "โดนัทใหม่"),
-            new Shape("ระนาบ", "primitive_plane_add", "ระนาบใหม่"),
-            new Shape("หัวลิง", "primitive_monkey_add", "หัวลิงใหม่") }) shapes.Items.Add(shape);
+            new Shape("Cube · กล่อง", "primitive_cube_add", "กล่องใหม่"),
+            new Shape("UV Sphere · ทรงกลม UV", "primitive_uv_sphere_add", "ทรงกลมใหม่"),
+            new Shape("Icosphere · ทรงกลมเหลี่ยม", "primitive_ico_sphere_add", "ทรงกลมเหลี่ยม"),
+            new Shape("Cylinder · ทรงกระบอก", "primitive_cylinder_add", "ทรงกระบอกใหม่"),
+            new Shape("Cone · ทรงกรวย", "primitive_cone_add", "ทรงกรวยใหม่"),
+            new Shape("Torus · โดนัท", "primitive_torus_add", "โดนัทใหม่"),
+            new Shape("Plane · ระนาบ", "primitive_plane_add", "ระนาบใหม่"),
+            new Shape("Monkey · หัวลิง", "primitive_monkey_add", "หัวลิงใหม่") }) shapes.Items.Add(shape);
         shapes.SelectedIndex = 0;
-        AddLabel(create, "ชื่อวัตถุ"); create.Controls.Add(shapeName); shapeName.Text = "กล่องใหม่";
-        AddLabel(create, "ตำแหน่ง X / Y / Z"); create.Controls.Add(createPosition);
-        AddLabel(create, "สเกล X / Y / Z"); create.Controls.Add(createScale);
+        AddLabel(create, "Name · ชื่อวัตถุ"); create.Controls.Add(shapeName); shapeName.Text = "กล่องใหม่";
+        AddLabel(create, "Location X/Y/Z · ตำแหน่ง"); create.Controls.Add(createPosition);
+        AddLabel(create, "Scale X/Y/Z · สเกล"); create.Controls.Add(createScale);
         var createButton = Theme.Button("เพิ่มรูปทรงและสร้างโมเดล", (_, _) => ApplyCreate(), true);
         createButton.Width = 220; create.Controls.Add(createButton);
 
         var edit = MakeFlow(); editPage.Controls.Add(edit);
         selectedLabel.AutoSize = false; selectedLabel.Width = 220; selectedLabel.Height = 40; edit.Controls.Add(selectedLabel);
-        AddLabel(edit, "ย้าย: ตำแหน่ง X / Y / Z"); edit.Controls.Add(position);
-        AddLabel(edit, "หมุน: องศา X / Y / Z"); edit.Controls.Add(rotation);
-        AddLabel(edit, "สเกล X / Y / Z"); edit.Controls.Add(scale);
+        AddLabel(edit, "Location X/Y/Z · ตำแหน่ง"); edit.Controls.Add(position);
+        AddLabel(edit, "Rotation X/Y/Z (°) · มุมหมุน"); edit.Controls.Add(rotation);
+        AddLabel(edit, "Scale X/Y/Z · สเกล"); edit.Controls.Add(scale);
         var applyButton = Theme.Button("ใช้กับวัตถุและสร้างใหม่", (_, _) => ApplyTransform(), true);
         applyButton.Width = 220; edit.Controls.Add(applyButton);
 

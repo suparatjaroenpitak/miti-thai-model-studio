@@ -59,10 +59,10 @@ public sealed class ApiCatalogForm : Form
         right.Controls.Add(Theme.Label("เป้าหมายสำหรับเมธอด/คุณสมบัติ — ระบุตัวแปรจากโค้ด", 8.5F, Theme.Muted), 0, 1);
         target.BackColor = Theme.Raised; target.ForeColor = Theme.Text; right.Controls.Add(target, 0, 2);
         positional.BackColor = Theme.Raised; positional.ForeColor = Theme.Text; right.Controls.Add(positional, 0, 3);
-        parameters.Columns.Add(new DataGridViewCheckBoxColumn { Name = "include", HeaderText = "ใช้", FillWeight = 12 });
-        parameters.Columns.Add(new DataGridViewTextBoxColumn { Name = "name", HeaderText = "พารามิเตอร์", ReadOnly = true, FillWeight = 30 });
-        parameters.Columns.Add(new DataGridViewTextBoxColumn { Name = "value", HeaderText = "ค่าในโค้ด Python", FillWeight = 42 });
-        parameters.Columns.Add(new DataGridViewTextBoxColumn { Name = "type", HeaderText = "ชนิด", ReadOnly = true, FillWeight = 16 });
+        parameters.Columns.Add(new DataGridViewCheckBoxColumn { Name = "include", HeaderText = "Use · ใช้", FillWeight = 12 });
+        parameters.Columns.Add(new DataGridViewTextBoxColumn { Name = "name", HeaderText = "Parameter · พารามิเตอร์", ReadOnly = true, FillWeight = 40 });
+        parameters.Columns.Add(new DataGridViewTextBoxColumn { Name = "value", HeaderText = "Value · ค่าในโค้ด Python", FillWeight = 32 });
+        parameters.Columns.Add(new DataGridViewTextBoxColumn { Name = "type", HeaderText = "Type · ชนิด", ReadOnly = true, FillWeight = 16 });
         parameters.CurrentCellDirtyStateChanged += (_, _) => { if (parameters.IsCurrentCellDirty) parameters.CommitEdit(DataGridViewDataErrorContexts.Commit); };
         parameters.CellValueChanged += (_, _) => GenerateCode();
         parameters.DataError += (_, e) => e.ThrowException = false;
@@ -136,18 +136,19 @@ public sealed class ApiCatalogForm : Form
             {
                 var value = ApiCatalogService.PythonValue(selected.Default, selected.Type ?? "");
                 if (selected.Type == "ENUM" && selected.Default.ValueKind == System.Text.Json.JsonValueKind.Array) value = SetLiteral(selected.Default);
-                parameters.Rows.Add(true, selected.DisplayName, value, ApiCatalogService.DataTypeThai(selected.Type ?? ""));
+                parameters.Rows.Add(true, ApiCatalogService.BilingualName(selected.Name, selected.ThaiName), value, ApiCatalogService.DataTypeThai(selected.Type ?? ""));
             }
             else foreach (var p in selected.Parameters.Where(p => p.Id != "rna_type" && !p.ReadOnly))
             {
                 var value = ApiCatalogService.PythonValue(p.Default, p.Type);
                 if (p.Type == "ENUM" && p.Default.ValueKind == System.Text.Json.JsonValueKind.Array) value = SetLiteral(p.Default);
-                var row = parameters.Rows[parameters.Rows.Add(p.Required, p.DisplayName + (p.Required ? " *" : ""), value, ApiCatalogService.DataTypeThai(p.Type))];
+                var englishName = (string.IsNullOrWhiteSpace(p.Name) ? p.Id : p.Name) + (p.Required ? " *" : "");
+                var row = parameters.Rows[parameters.Rows.Add(p.Required, ApiCatalogService.BilingualName(englishName, p.ThaiName), value, ApiCatalogService.DataTypeThai(p.Type))];
                 row.Tag = p;
-                row.Cells[1].ToolTipText = p.Id + "\n" + (p.ThaiDescription ?? p.Description);
+                row.Cells[1].ToolTipText = p.Id + "\n" + ApiCatalogService.BilingualName(p.Description, p.ThaiDescription, "\n");
                 if (p.Type == "ENUM" && p.EnumItems.Count > 0 && p.Default.ValueKind != System.Text.Json.JsonValueKind.Array)
                 {
-                    var choices = p.EnumItems.Select(e => new EnumChoice(ApiCatalogService.PythonString(e.Id), e.ThaiName ?? e.Name)).ToArray();
+                    var choices = p.EnumItems.Select(e => new EnumChoice(ApiCatalogService.PythonString(e.Id), ApiCatalogService.BilingualName(e.Name, e.ThaiName))).ToArray();
                     var combo = new DataGridViewComboBoxCell { DataSource = choices, DisplayMember = "Label", ValueMember = "Value", DisplayStyle = DataGridViewComboBoxDisplayStyle.DropDownButton, FlatStyle = FlatStyle.Flat };
                     var existing = row.Cells[2].Value?.ToString(); row.Cells[2] = combo;
                     combo.Value = choices.Any(c => c.Value == existing) ? existing : choices[0].Value;

@@ -16,6 +16,12 @@ internal static class Program
         panel.Dock = DockStyle.Fill; host.Controls.Add(panel); host.Show(); Application.DoEvents();
         var type = typeof(ShapeTransformPanel);
         var shapes = (ComboBox)type.GetField("shapes", BindingFlags.NonPublic | BindingFlags.Instance)!.GetValue(panel)!;
+        if (!shapes.Items[0]!.ToString()!.StartsWith("Cube · กล่อง", StringComparison.Ordinal))
+            throw new Exception("Shape choices should show Blender English before Thai");
+        var visibleLabels = Descendants(panel).OfType<Label>().Select(l => l.Text).ToArray();
+        if (!visibleLabels.Contains("Location X/Y/Z · ตำแหน่ง") || !visibleLabels.Contains("Rotation X/Y/Z (°) · มุมหมุน")
+            || !visibleLabels.Contains("Scale X/Y/Z · สเกล"))
+            throw new Exception("Transform parameters should show Blender English before Thai");
         var create = type.GetMethod("CreateSnippet", BindingFlags.NonPublic | BindingFlags.Instance)!;
         var source = "import bpy\n";
         for (var i = 0; i < shapes.Items.Count; i++)
@@ -63,5 +69,14 @@ internal static class Program
         if (selected.Location != new Vector3(2, 3, 4) || Math.Abs(selected.RotationDegrees.Z - 45) > 0.01f)
             throw new Exception("Selected object's transform was not restored to the right-side panel");
         Console.WriteLine("SHAPE_TOOLS_SUCCESS: eight shapes and move/rotate/scale verified in Blender");
+    }
+
+    private static IEnumerable<Control> Descendants(Control parent)
+    {
+        foreach (Control child in parent.Controls)
+        {
+            yield return child;
+            foreach (var descendant in Descendants(child)) yield return descendant;
+        }
     }
 }

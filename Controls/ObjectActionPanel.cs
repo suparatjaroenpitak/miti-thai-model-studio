@@ -116,14 +116,15 @@ public sealed class ObjectActionPanel : UserControl
         details.Text = selected.DisplayName + "\n" + selected.Id;
         foreach (var p in selected.Parameters.Where(p => p.Id != "rna_type" && !p.ReadOnly))
         {
-            var label = Theme.Label(FriendlyName(p) + (p.Required ? " *" : ""), 8.5f, Theme.Text);
-            label.AutoSize = false; label.AutoEllipsis = true; label.Width = 220; label.Height = 23; fields.Controls.Add(label);
+            var englishName = (string.IsNullOrWhiteSpace(p.Name) ? p.Id : p.Name) + (p.Required ? " *" : "");
+            var label = Theme.Label(ApiCatalogService.BilingualName(englishName, FriendlyName(p), "\n"), 8.5f, Theme.Text);
+            label.AutoSize = false; label.AutoEllipsis = true; label.Width = 220; label.Height = label.Text.Contains('\n') ? 38 : 23; fields.Controls.Add(label);
             Control input;
-            if (p.Type == "BOOLEAN") input = new CheckBox { Text = "เปิดใช้งาน", Checked = p.Default.ValueKind == System.Text.Json.JsonValueKind.True, ForeColor = Theme.Text, Width = 220, Height = 26 };
+            if (p.Type == "BOOLEAN") input = new CheckBox { Text = "Enabled · เปิดใช้งาน", Checked = p.Default.ValueKind == System.Text.Json.JsonValueKind.True, ForeColor = Theme.Text, Width = 220, Height = 26 };
             else if (p.Type == "ENUM" && p.EnumItems.Count > 0)
             {
                 var combo = new StudioComboBox { Width = 220 };
-                foreach (var option in p.EnumItems) combo.Items.Add(new Choice(option.Id, option.ThaiName ?? option.Name));
+                foreach (var option in p.EnumItems) combo.Items.Add(new Choice(option.Id, ApiCatalogService.BilingualName(option.Name, option.ThaiName)));
                 var initial = p.Default.ValueKind == System.Text.Json.JsonValueKind.String ? p.Default.GetString() : null;
                 combo.SelectedIndex = Math.Max(0, combo.Items.Cast<Choice>().ToList().FindIndex(c => c.Id == initial)); input = combo;
             }
@@ -137,8 +138,8 @@ public sealed class ObjectActionPanel : UserControl
                 input = number;
             }
             else input = new TextBox { Text = p.Type == "STRING" && p.Default.ValueKind == System.Text.Json.JsonValueKind.String ? p.Default.GetString() ?? "" : ApiCatalogService.PythonValue(p.Default, p.Type), Width = 220, BackColor = Theme.Raised, ForeColor = Theme.Text };
-            var help = p.ThaiDescription ?? p.Description;
-            if (!string.IsNullOrWhiteSpace(help)) { tips.SetToolTip(label, help); tips.SetToolTip(input, help); }
+            var help = p.Id + "\n" + ApiCatalogService.BilingualName(p.Description, p.ThaiDescription, "\n");
+            tips.SetToolTip(label, help); tips.SetToolTip(input, help);
             input.Margin = new Padding(0, 0, 0, 7); fields.Controls.Add(input); controls.Add((p, input));
             if (input is NumericUpDown numericInput) numericInput.ValueChanged += (_, _) =>
             {
