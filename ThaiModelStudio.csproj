@@ -11,7 +11,7 @@
     <AssemblyName>MitiStudio</AssemblyName>
     <RootNamespace>ThaiModelStudio</RootNamespace>
     <ApplicationHighDpiMode>PerMonitorV2</ApplicationHighDpiMode>
-    <Version>0.11.0</Version>
+    <Version>0.12.0</Version>
     <Product>มิติ ZBrush ไทย</Product>
     <Description>แผงควบคุม ZBrush ภาษาไทยผ่าน Maxon Python API</Description>
   </PropertyGroup>
@@ -20,9 +20,11 @@
     <Compile Include="Controls\Theme.cs" />
     <Compile Include="ZBrushStudioForm.cs" />
     <Compile Include="Services\ZBrushCommandCatalog.cs" />
+    <Compile Include="Services\ZBrushCommandIndex.cs" />
     <Compile Include="Services\ZBrushOnlyService.cs" />
     <None Include="zbrush\runner.py" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
     <None Include="README.md" CopyToPublishDirectory="PreserveNewest" />
     <None Include="docs\ZBrush-Thai.md" CopyToPublishDirectory="PreserveNewest" />
+    <None Include="docs\ZBrush-REA-2026-11-07.md" CopyToPublishDirectory="PreserveNewest" />
   </ItemGroup>
 </Project>

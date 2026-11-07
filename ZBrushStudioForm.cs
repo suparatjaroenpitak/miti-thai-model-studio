@@ -12,6 +12,8 @@ public sealed class MainForm : Form
     private readonly List<ZBrushAction> queue = [];
     private readonly TextBox search = Input();
     private readonly ComboBox categories = Choice();
+    private readonly ComboBox operationMode = Choice();
+    private readonly Label catalogNote = Theme.Label("กำลังอ่านเมนู ZBrush…", 8.3f, Theme.Muted);
     private readonly ListBox commands = new() { Dock = DockStyle.Fill, BorderStyle = BorderStyle.None,
         BackColor = Theme.Panel, ForeColor = Theme.Text, IntegralHeight = false,
         DrawMode = DrawMode.OwnerDrawFixed, ItemHeight = 43 };
@@ -33,6 +35,7 @@ public sealed class MainForm : Form
     private readonly RichTextBox log = new() { Dock = DockStyle.Fill, ReadOnly = true, BackColor = Theme.Background,
         ForeColor = Theme.Muted, BorderStyle = BorderStyle.None, Font = new Font("Consolas", 9), WordWrap = true };
     private readonly Panel pathRow = new() { Width = 555, Height = 70, BackColor = Theme.Panel };
+    private readonly Panel operationRow = new() { Width = 555, Height = 70, BackColor = Theme.Panel };
     private readonly Panel projectRow = new() { Width = 555, Height = 76, BackColor = Theme.Panel };
     private readonly Panel valueRow = new() { Width = 555, Height = 70, BackColor = Theme.Panel };
     private readonly Panel fileRow = new() { Width = 555, Height = 76, BackColor = Theme.Panel };
@@ -42,6 +45,7 @@ public sealed class MainForm : Form
     private readonly Button runButton;
     private readonly Button stopButton;
     private ZBrushCommandDefinition? selected;
+    private ZBrushCommandIndex commandIndex = ZBrushCommandIndex.Load(null);
     private string? zbrushPath;
     private CancellationTokenSource? operation;
     private readonly string dataDirectory = Path.Combine(
@@ -50,7 +54,7 @@ public sealed class MainForm : Form
 
     public MainForm()
     {
-        Text = "มิติ ZBrush ไทย · Thai ZBrush Studio 0.11";
+        Text = "มิติ ZBrush ไทย · Thai ZBrush Studio 0.12";
         StartPosition = FormStartPosition.CenterScreen;
         Size = new Size(1380, 900); MinimumSize = new Size(1050, 700);
         BackColor = Theme.Background; ForeColor = Theme.Text;
@@ -77,14 +81,14 @@ public sealed class MainForm : Form
 
         search.TextChanged += (_, _) => FilterCommands();
         categories.SelectedIndexChanged += (_, _) => FilterCommands();
+        operationMode.SelectedIndexChanged += (_, _) => UpdateOperationFields();
         commands.SelectedIndexChanged += (_, _) => ShowSelected();
         commands.DrawItem += DrawCommand;
         queued.DrawItem += DrawQueued;
-        foreach (var category in new[] { "ทั้งหมด", "สร้าง", "ไฟล์", "SubTool", "โครงสร้าง", "หัวแปรง", "มุมมอง", "UV และสี", "มาสก์", "เมนูอื่น" })
-            categories.Items.Add(category);
-        categories.SelectedIndex = 0;
+        operationMode.Items.AddRange(["กดปุ่ม · Press", "ตั้งตัวเลข · Set", "สลับสถานะ · Toggle"]);
+        operationMode.SelectedIndex = 0;
         LoadSettings();
-        FilterCommands();
+        ReloadCommandIndex();
         FormClosing += (_, _) => operation?.Cancel();
     }
 
@@ -102,11 +106,17 @@ public sealed class MainForm : Form
         action.DropDownItems.Add("เพิ่มคำสั่งลงคิว", null, (_, _) => AddToQueue());
         action.DropDownItems.Add("รันคำสั่งที่เลือก", null, async (_, _) => await RunSelectedAsync());
         action.DropDownItems.Add("รันทั้งคิว", null, async (_, _) => await RunQueueAsync());
+        var language = new ToolStripMenuItem("ภาษาไทยใน ZBrush · Language");
+        language.DropDownItems.Add("ค้นหาเมนูสร้างภาษา · Create", null, (_, _) => SelectCommand("Preferences:Language:Create"));
+        language.DropDownItems.Add("ค้นหาเมนูแก้คำแปล · Edit", null, (_, _) => SelectCommand("Preferences:Language:Edit"));
+        language.DropDownItems.Add("ค้นหาเมนูส่งออกภาษา · Export", null, (_, _) => SelectCommand("Preferences:Language:Export"));
+        language.DropDownItems.Add(new ToolStripSeparator());
+        language.DropDownItems.Add("ขั้นตอนทำภาษาไทยใน ZBrush…", null, (_, _) => ShowLanguageGuide());
         var help = new ToolStripMenuItem("ช่วยเหลือ · Help");
         help.DropDownItems.Add("วิธีใช้งาน", null, (_, _) => MessageBox.Show(this,
             "1. เลือกคำสั่งภาษาไทยทางซ้าย\n2. ปรับพารามิเตอร์ด้านขวา\n3. กดรันทันที หรือเพิ่มหลายคำสั่งลงคิว\n4. ใช้หน้าต่าง ZBrush จริงเป็น viewport\n\nถ้ามี ZBrush เปิดอยู่ ให้บันทึกสคริปต์ .py แล้วโหลดผ่าน ZBrush > ZScript > Python Scripting > Load\nการกดรันจากแอปจะเปิด ZBrush process ใหม่; เลือก .ZPR เมื่อต้องการโหลดโปรเจกต์เดิม",
             "คู่มือ · Guide", MessageBoxButtons.OK, MessageBoxIcon.Information));
-        menu.Items.AddRange([file, action, help]);
+        menu.Items.AddRange([file, action, language, help]);
         return menu;
     }
 
@@ -143,8 +153,7 @@ public sealed class MainForm : Form
         table.Controls.Add(search, 0, 1);
         categories.Dock = DockStyle.Fill; table.Controls.Add(categories, 0, 2);
         table.Controls.Add(commands, 0, 3);
-        var note = Theme.Label("เมนูอื่น: ใส่ UI path ของ ZBrush ได้เอง\nรายการที่ไม่ยืนยันจะตรวจใน ZBrush ตอนรัน", 8.3f, Theme.Muted);
-        table.Controls.Add(note, 0, 4);
+        table.Controls.Add(catalogNote, 0, 4);
         panel.Controls.Add(table);
         return panel;
     }
@@ -156,8 +165,8 @@ public sealed class MainForm : Form
         body.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
         body.RowStyles.Add(new RowStyle(SizeType.Absolute, 83));
         body.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
-        body.RowStyles.Add(new RowStyle(SizeType.Absolute, 193));
-        body.RowStyles.Add(new RowStyle(SizeType.Absolute, 158));
+        body.RowStyles.Add(new RowStyle(SizeType.Absolute, 130));
+        body.RowStyles.Add(new RowStyle(SizeType.Absolute, 90));
         var heading = new Panel { Dock = DockStyle.Fill, BackColor = Theme.Background };
         selectedTitle.Location = new Point(4, 4); heading.Controls.Add(selectedTitle);
         selectedHelp.Location = new Point(5, 39); selectedHelp.MaximumSize = new Size(790, 42); heading.Controls.Add(selectedHelp);
@@ -166,6 +175,7 @@ public sealed class MainForm : Form
             WrapContents = false, AutoScroll = true, BackColor = Theme.Panel, Padding = new Padding(15, 13, 8, 12) };
         settings.Controls.Add(MakeProjectRow());
         settings.Controls.Add(MakePathRow());
+        settings.Controls.Add(MakeOperationRow());
         settings.Controls.Add(MakeValueRow());
         settings.Controls.Add(MakeFileRow());
         settings.Controls.Add(MakeIndexRow());
@@ -203,6 +213,12 @@ public sealed class MainForm : Form
         AddField(pathRow, "ZBrush UI path · ที่อยู่เมนู", uiPath);
         uiPath.Width = 505;
         return pathRow;
+    }
+    private Control MakeOperationRow()
+    {
+        AddField(operationRow, "Action · วิธีใช้เมนูที่พบจาก ZBrush", operationMode);
+        operationMode.Width = 250;
+        return operationRow;
     }
     private Control MakeProjectRow()
     {
@@ -266,15 +282,41 @@ public sealed class MainForm : Form
         }
     }
 
+    private void ReloadCommandIndex()
+    {
+        try { commandIndex = ZBrushCommandIndex.Load(zbrushPath); }
+        catch (Exception ex)
+        {
+            commandIndex = ZBrushCommandIndex.Load(null);
+            Log("อ่านรายการเมนู ZBrush ไม่ได้: " + ex.Message);
+        }
+        var previousCategory = categories.SelectedItem?.ToString();
+        categories.BeginUpdate();
+        categories.Items.Clear();
+        categories.Items.Add("แนะนำ");
+        categories.Items.Add("ทั้งหมด");
+        foreach (var category in commandIndex.Items.Select(command => command.Category)
+                     .Distinct(StringComparer.Ordinal).OrderBy(category => category, StringComparer.CurrentCulture))
+            categories.Items.Add(category);
+        categories.EndUpdate();
+        categories.SelectedItem = previousCategory != null && categories.Items.Contains(previousCategory)
+            ? previousCategory : "แนะนำ";
+        catalogNote.Text = commandIndex.NativeCommandCount > 0
+            ? $"อ่าน {commandIndex.NativeCommandCount:N0} เมนูจาก ZBrush ที่ติดตั้ง\nเลือก กด/ตั้งค่า/สลับ; ตรวจบริบทจริงตอนรัน"
+            : "แสดงคำสั่งแนะนำ · เลือก ZBrush.exe เพื่ออ่านเมนูทั้งหมด";
+        FilterCommands();
+    }
+
     private void FilterCommands()
     {
         var previous = (commands.SelectedItem as ZBrushCommandDefinition)?.Id;
         var query = search.Text.Trim();
         var category = categories.SelectedItem?.ToString() ?? "ทั้งหมด";
         commands.BeginUpdate(); commands.Items.Clear();
-        foreach (var command in ZBrushCommandCatalog.All)
+        foreach (var command in commandIndex.Items)
         {
-            if (category != "ทั้งหมด" && command.Category != category) continue;
+            if (category == "แนะนำ" && query.Length == 0 && command.Id.StartsWith("xml:", StringComparison.Ordinal)) continue;
+            if (category != "ทั้งหมด" && category != "แนะนำ" && command.Category != category) continue;
             if (query.Length > 0 && !new[] { command.Thai, command.English, command.Path, command.Category }
                     .Any(text => text.Contains(query, StringComparison.OrdinalIgnoreCase))) continue;
             commands.Items.Add(command);
@@ -284,6 +326,32 @@ public sealed class MainForm : Form
             (commands.Items[i] as ZBrushCommandDefinition)?.Id == previous, -1);
         commands.SelectedIndex = old >= 0 ? old : commands.Items.Count > 0 ? 0 : -1;
     }
+
+    private void SelectCommand(string path)
+    {
+        categories.SelectedItem = "ทั้งหมด";
+        search.Text = path;
+        for (int i = 0; i < commands.Items.Count; i++)
+            if (commands.Items[i] is ZBrushCommandDefinition command &&
+                command.Path.Equals(path, StringComparison.OrdinalIgnoreCase))
+            {
+                commands.SelectedIndex = i;
+                commands.TopIndex = i;
+                return;
+            }
+        ShowInfo("ไม่พบเมนูนี้ใน ZBrush ที่เลือก");
+    }
+
+    private void ShowLanguageGuide() => MessageBox.Show(this,
+        "ทำภาษาไทยใน ZBrush ตัวจริง\n\n" +
+        "1. เปิด ZBrush และให้ผ่านหน้าเริ่มต้น/สิทธิ์ใช้งาน\n" +
+        "2. ไปที่ Preferences > Language > English\n" +
+        "3. เลือก Create เพื่อสร้าง Custom Language จากภาษาอังกฤษ\n" +
+        "4. ใช้ Edit หรือ Auto-edit แปลปุ่ม คำอธิบาย และข้อความ\n" +
+        "5. Save และ Export ชุดภาษาไว้เป็นสำรอง\n\n" +
+        "ฟอนต์ NotoSans-Regular ที่ติดตั้งไม่มีอักขระไทย ต้องตั้งฟอนต์รองรับไทยใน ZFontsWin.xml ตามคู่มือ Maxon แล้วทดสอบใน ZBrush จริง\n" +
+        "แอปนี้ไม่แก้ไฟล์ภาษาติดตั้งให้เอง",
+        "ภาษาไทยใน ZBrush · Custom Language", MessageBoxButtons.OK, MessageBoxIcon.Information);
 
     private void ShowSelected()
     {
@@ -298,7 +366,10 @@ public sealed class MainForm : Form
         selectedHelp.Text = selected.Help + (selected.Documented ? "" : "  ·  ตรวจ UI path ตอนรัน");
         uiPath.Text = selected.Path;
         uiPath.ReadOnly = selected.Path.Length > 0;
-        pathRow.Visible = selected.Path.Length == 0 && selected.Mode is "press" or "set" or "toggle";
+        var indexed = selected.Id.StartsWith("xml:", StringComparison.Ordinal);
+        pathRow.Visible = indexed || (selected.Path.Length == 0 && selected.Mode is "press" or "set" or "toggle");
+        operationRow.Visible = indexed;
+        operationMode.SelectedIndex = 0;
         valueRow.Visible = selected.Mode == "set";
         fileRow.Visible = selected.Mode is "import" or "export";
         indexRow.Visible = selected.Mode == "select_subtool";
@@ -307,22 +378,33 @@ public sealed class MainForm : Form
         value.Minimum = (decimal)selected.Minimum; value.Maximum = (decimal)selected.Maximum;
         value.Value = Math.Clamp((decimal)selected.DefaultValue, value.Minimum, value.Maximum);
         filePath.Text = "";
+        UpdateOperationFields();
+    }
+
+    private void UpdateOperationFields()
+    {
+        if (selected == null) return;
+        var indexed = selected.Id.StartsWith("xml:", StringComparison.Ordinal);
+        valueRow.Visible = indexed ? operationMode.SelectedIndex == 1 : selected.Mode == "set";
     }
 
     private ZBrushAction? CurrentAction()
     {
         if (selected == null) return null;
+        var mode = selected.Id.StartsWith("xml:", StringComparison.Ordinal)
+            ? operationMode.SelectedIndex switch { 1 => "set", 2 => "toggle", _ => "press" }
+            : selected.Mode;
         var path = uiPath.Text.Trim();
-        if (selected.Mode is "press" or "set" or "toggle" && path.Length == 0)
+        if (mode is "press" or "set" or "toggle" && path.Length == 0)
         {
             ShowInfo("ใส่ ZBrush UI path ก่อนใช้คำสั่ง"); return null;
         }
-        if (selected.Mode is "import" or "export" && filePath.Text.Trim().Length == 0)
+        if (mode is "import" or "export" && filePath.Text.Trim().Length == 0)
         {
             ShowInfo("เลือกไฟล์ OBJ ก่อนใช้คำสั่ง"); return null;
         }
-        return new ZBrushAction(selected.Mode, selected.Mode is "import" or "export" ? selected.Path : path,
-            (double)value.Value, selected.Mode is "import" or "export" ? Path.GetFullPath(filePath.Text.Trim()) : "", (int)subtoolIndex.Value,
+        return new ZBrushAction(mode, mode is "import" or "export" ? selected.Path : path,
+            (double)value.Value, mode is "import" or "export" ? Path.GetFullPath(filePath.Text.Trim()) : "", (int)subtoolIndex.Value,
             move.Select(input => (double)input.Value).ToArray(),
             rotate.Select(input => (double)input.Value).ToArray(),
             scale.Select(input => (double)input.Value).ToArray(),
@@ -410,7 +492,7 @@ public sealed class MainForm : Form
         if (Busy) return;
         using var dialog = new OpenFileDialog { Title = "เลือก ZBrush.exe", Filter = "ZBrush (ZBrush.exe)|ZBrush.exe", FileName = "ZBrush.exe" };
         if (dialog.ShowDialog(this) != DialogResult.OK) return;
-        zbrushPath = dialog.FileName; SaveSettings(); UpdateEngine();
+        zbrushPath = dialog.FileName; SaveSettings(); UpdateEngine(); ReloadCommandIndex();
     }
     private void OpenZBrush()
     {
